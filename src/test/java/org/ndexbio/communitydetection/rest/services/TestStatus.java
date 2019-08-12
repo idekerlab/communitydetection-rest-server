@@ -58,7 +58,7 @@ public class TestStatus {
 
             MockHttpResponse response = new MockHttpResponse();
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
-            Configuration.getInstance().setEnrichmentEngine(null);
+            Configuration.getInstance().setCommunityDetectionEngine(null);
 
             dispatcher.invoke(request, response);
             assertEquals(500, response.getStatus());
@@ -99,7 +99,7 @@ public class TestStatus {
             expect(mockEngine.getServerStatus()).andReturn(null);
             replay(mockEngine);
             
-            Configuration.getInstance().setEnrichmentEngine(mockEngine);
+            Configuration.getInstance().setCommunityDetectionEngine(mockEngine);
 
             dispatcher.invoke(request, response);
             assertEquals(500, response.getStatus());
@@ -111,7 +111,7 @@ public class TestStatus {
             verify(mockEngine);
         } finally {
             _folder.delete();
-            Configuration.getInstance().setEnrichmentEngine(null);
+            Configuration.getInstance().setCommunityDetectionEngine(null);
         }
     }
     
@@ -141,7 +141,7 @@ public class TestStatus {
             expect(mockEngine.getServerStatus()).andThrow(new EnrichmentException("hi"));
             replay(mockEngine);
             
-            Configuration.getInstance().setEnrichmentEngine(mockEngine);
+            Configuration.getInstance().setCommunityDetectionEngine(mockEngine);
 
             dispatcher.invoke(request, response);
             assertEquals(500, response.getStatus());
@@ -153,7 +153,7 @@ public class TestStatus {
             verify(mockEngine);
         } finally {
             _folder.delete();
-            Configuration.getInstance().setEnrichmentEngine(null);
+            Configuration.getInstance().setCommunityDetectionEngine(null);
         }
     }
     
@@ -185,7 +185,7 @@ public class TestStatus {
             expect(mockEngine.getServerStatus()).andReturn(sObj);
             replay(mockEngine);
             
-            Configuration.getInstance().setEnrichmentEngine(mockEngine);
+            Configuration.getInstance().setCommunityDetectionEngine(mockEngine);
 
             dispatcher.invoke(request, response);
             assertEquals(200, response.getStatus());
@@ -196,7 +196,7 @@ public class TestStatus {
             verify(mockEngine);
         } finally {
             _folder.delete();
-            Configuration.getInstance().setEnrichmentEngine(null);
+            Configuration.getInstance().setCommunityDetectionEngine(null);
         }
     }
 }

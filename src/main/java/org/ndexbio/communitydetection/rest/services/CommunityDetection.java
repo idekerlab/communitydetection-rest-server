@@ -14,7 +14,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import java.io.InputStream;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -22,13 +21,13 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import org.ndexbio.enrichment.rest.model.EnrichmentQuery;
-import org.ndexbio.enrichment.rest.model.EnrichmentQueryResults;
-import org.ndexbio.enrichment.rest.model.EnrichmentQueryStatus;
-import org.ndexbio.enrichment.rest.model.ErrorResponse;
-import org.ndexbio.enrichment.rest.model.Task;
-import org.ndexbio.enrichment.rest.model.exceptions.EnrichmentException;
+import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequest;
+import org.ndexbio.communitydetection.rest.model.CommunityDetectionResult;
 import org.ndexbio.communitydetection.rest.engine.CommunityDetectionEngine;
+import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequestStatus;
+import org.ndexbio.communitydetection.rest.model.ErrorResponse;
+import org.ndexbio.communitydetection.rest.model.Task;
+import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionException;
 
 /**
  * CommunityDetection service
@@ -64,21 +63,21 @@ public class CommunityDetection {
                                 schema = @Schema(implementation = ErrorResponse.class)))
                })
     public Response requestEnrichment(@RequestBody(description="Query", required = true,
-                                                   content = @Content(schema = @Schema(implementation = EnrichmentQuery.class))) final String query) {
+                                                   content = @Content(schema = @Schema(implementation = CommunityDetectionRequest.class))) final String query) {
         ObjectMapper omappy = new ObjectMapper();
 
         try {
             // not sure why but I cannot get resteasy and jackson to worktogether to
             // automatically translate json to Query class so I'm doing it after the
             // fact
-            CommunityDetectionEngine enricher = Configuration.getInstance().getEnrichmentEngine();
+            CommunityDetectionEngine enricher = Configuration.getInstance().getCommunityDetectionEngine();
             if (enricher == null){
-                throw new NullPointerException("Enrichment Engine not loaded");
+                throw new NullPointerException("CommunityDetection Engine not loaded");
             }
-            EnrichmentQuery pQuery = omappy.readValue(query, EnrichmentQuery.class);
-            String id = enricher.query(pQuery);
+            CommunityDetectionRequest pQuery = omappy.readValue(query, CommunityDetectionRequest.class);
+            String id = enricher.request(pQuery);
             if (id == null){
-                throw new EnrichmentException("No id returned from enrichment engine");
+                throw new CommunityDetectionException("No id returned from CommunityDetection engine");
             }
             Task t = new Task();
             t.setId(id);
@@ -100,7 +99,7 @@ public class CommunityDetection {
                    @ApiResponse(responseCode = "200",
                            description = "Success",
                            content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                                schema = @Schema(implementation = EnrichmentQueryResults.class))),
+                                schema = @Schema(implementation = CommunityDetectionResult.class))),
                    @ApiResponse(responseCode = "410",
                            description = "Task not found"),
                    @ApiResponse(responseCode = "500", description = "Server Error",
@@ -113,11 +112,12 @@ public class CommunityDetection {
         ObjectMapper omappy = new ObjectMapper();
 
         try {
-            CommunityDetectionEngine enricher = Configuration.getInstance().getEnrichmentEngine();
-            if (enricher == null){
-                throw new NullPointerException("Enrichment Engine not loaded");
+            CommunityDetectionEngine engine = Configuration.getInstance().getCommunityDetectionEngine();
+            if (engine == null){
+                throw new NullPointerException("CommunityDetection Engine not loaded");
             }
-            EnrichmentQueryResults eqr = enricher.getQueryResults(id, start, size);
+            
+            CommunityDetectionResult eqr = engine.getResult(id);
             if (eqr == null){
                 return Response.status(410).build();
             }
@@ -138,22 +138,22 @@ public class CommunityDetection {
                    @ApiResponse(responseCode = "200",
                            description = "Success",
                            content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                                schema = @Schema(implementation = EnrichmentQueryStatus.class))),
+                                schema = @Schema(implementation = CommunityDetectionRequestStatus.class))),
                    @ApiResponse(responseCode = "410",
                            description = "Task not found"),
                    @ApiResponse(responseCode = "500", description = "Server Error",
                                 content = @Content(mediaType = MediaType.APPLICATION_JSON,
                                 schema = @Schema(implementation = ErrorResponse.class)))
                })
-    public Response getEnrichmentQueryStatus(@PathParam("id") final String id) {
+    public Response getRequestStatus(@PathParam("id") final String id) {
         ObjectMapper omappy = new ObjectMapper();
 
         try {
-            CommunityDetectionEngine enricher = Configuration.getInstance().getEnrichmentEngine();
-            if (enricher == null){
-                throw new NullPointerException("Enrichment Engine not loaded");
+            CommunityDetectionEngine engine = Configuration.getInstance().getCommunityDetectionEngine();
+            if (engine == null){
+                throw new NullPointerException("CommunityDetection Engine not loaded");
             }
-            EnrichmentQueryStatus eqs = enricher.getQueryStatus(id);
+            CommunityDetectionRequestStatus eqs = engine.getStatus(id);
             if (eqs ==  null){
                 return Response.status(410).build();
             }
@@ -178,15 +178,15 @@ public class CommunityDetection {
                                 content = @Content(mediaType = MediaType.APPLICATION_JSON,
                                 schema = @Schema(implementation = ErrorResponse.class)))
                })
-    public Response deleteQueryResult(@PathParam("id") final String id) {
+    public Response deleteRequest(@PathParam("id") final String id) {
         ObjectMapper omappy = new ObjectMapper();
 
         try {
-            CommunityDetectionEngine enricher = Configuration.getInstance().getEnrichmentEngine();
-            if (enricher == null){
-                throw new NullPointerException("Enrichment Engine not loaded");
+            CommunityDetectionEngine engine = Configuration.getInstance().getCommunityDetectionEngine();
+            if (engine == null){
+                throw new NullPointerException("CommunityDetection Engine not loaded");
             }
-            enricher.delete(id);
+            engine.delete(id);
             return Response.ok().build();
         }
         catch(Exception ex){
@@ -194,39 +194,4 @@ public class CommunityDetection {
             return Response.serverError().type(MediaType.APPLICATION_JSON).entity(er.asJson()).build();
         }
     }
-    
-    @GET 
-    @Path("/{id}/overlaynetwork")
-    @Operation(summary = "Gets result of enrichment from a specific database and network as CX",
-               description="NOTE: For incomplete/failed 500 will be returned\n",
-               responses = {
-                   @ApiResponse(responseCode = "200",
-                           description = "Delete request successfully received"),
-                   @ApiResponse(responseCode = "410",
-                           description = "Task not found"),
-                   @ApiResponse(responseCode = "500", description = "Server Error",
-                                content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                                schema = @Schema(implementation = ErrorResponse.class)))
-               })
-    public Response getOverlayNetwork(@PathParam("id") final String id, @Parameter(description="UUID of database") @QueryParam("databaseUUID") final String databaseUUID,
-            @Parameter(description="UUID of network", required = true) @QueryParam("networkUUID") final String networkUUID) {
-        ObjectMapper omappy = new ObjectMapper();
-        InputStream in = null;
-        try {
-            CommunityDetectionEngine enricher = Configuration.getInstance().getEnrichmentEngine();
-            if (enricher == null){
-                throw new NullPointerException("Enrichment Engine not loaded");
-            }
-            in = enricher.getNetworkOverlayAsCX(id, databaseUUID, networkUUID);
-            if (in == null){
-                return Response.status(410).build();
-            }
-            return Response.ok().type(MediaType.APPLICATION_JSON).entity(in).build();
-        }
-        catch(Exception ex){
-            ErrorResponse er = new ErrorResponse("Error getting overlay network for id: " + id, ex);
-            return Response.serverError().type(MediaType.APPLICATION_JSON).entity(er.asJson()).build();
-        }
-    }
-    
 }

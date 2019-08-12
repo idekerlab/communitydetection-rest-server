@@ -57,10 +57,10 @@ public class TestConfiguration {
             fos.close();
             Configuration.setAlternateConfigurationFile(configFile.getAbsolutePath());
             Configuration config = Configuration.reloadConfiguration();
-            assertEquals("/tmp", config.getEnrichmentDatabaseDirectory());
-            assertEquals("/tmp", config.getEnrichmentTaskDirectory());
+            assertEquals("/tmp", config.getDatabaseDirectory());
+            assertEquals("/tmp", config.getTaskDirectory());
             assertNull(config.getNDExDatabases());
-            assertNull(config.getEnrichmentEngine());
+            assertNull(config.getCommunityDetectionEngine());
             assertEquals(File.separator + "tmp" + File.separator + Configuration.DATABASE_RESULTS_JSON_FILE,
                          config.getDatabaseResultsFile().getAbsolutePath());
         } finally {
@@ -85,9 +85,9 @@ public class TestConfiguration {
             fos.close();
             Configuration.setAlternateConfigurationFile(configFile.getAbsolutePath());
             Configuration config = Configuration.reloadConfiguration();
-            assertEquals(tempDir.getAbsolutePath(), config.getEnrichmentDatabaseDirectory());
-            assertEquals(taskDir.getAbsolutePath(), config.getEnrichmentTaskDirectory());
-            assertNull(config.getEnrichmentEngine());
+            assertEquals(tempDir.getAbsolutePath(), config.getDatabaseDirectory());
+            assertEquals(taskDir.getAbsolutePath(), config.getTaskDirectory());
+            assertNull(config.getCommunityDetectionEngine());
             assertEquals(tempDir.getAbsolutePath() + File.separator + Configuration.DATABASE_RESULTS_JSON_FILE,
                          config.getDatabaseResultsFile().getAbsolutePath());
             ObjectMapper mapper = new ObjectMapper();

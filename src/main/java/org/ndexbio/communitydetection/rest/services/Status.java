@@ -57,7 +57,7 @@ public class Status {
         ObjectMapper omappy = new ObjectMapper();
 
         try {
-            CommunityDetectionEngine enricher = Configuration.getInstance().getEnrichmentEngine();
+            CommunityDetectionEngine enricher = Configuration.getInstance().getCommunityDetectionEngine();
             if (enricher == null){
                 throw new NullPointerException("CommunityDetection Engine not loaded");
             }

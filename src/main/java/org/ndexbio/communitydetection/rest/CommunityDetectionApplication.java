@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.jboss.resteasy.plugins.interceptors.CorsFilter;
 import org.ndexbio.communitydetection.rest.services.CommunityDetection;
-import org.ndexbio.communitydetection.rest.services.EnrichmentDatabase;
 import org.ndexbio.communitydetection.rest.services.Status;
 
 public class CommunityDetectionApplication extends Application {
@@ -31,7 +30,6 @@ public class CommunityDetectionApplication extends Application {
     @Override
     public Set<Class<?>> getClasses() {
         return Stream.of(CommunityDetection.class,
-                EnrichmentDatabase.class,
                 Status.class,
                 OpenApiResource.class,
                 AcceptHeaderOpenApiResource.class).collect(Collectors.toSet());

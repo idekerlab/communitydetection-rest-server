@@ -42,12 +42,12 @@ public class CommunityDetectionHttpServletDispatcher extends HttpServletDispatch
         try {
             BasicEnrichmentEngineFactory fac = new BasicEnrichmentEngineFactory(Configuration.getInstance());
             _logger.debug("Creating CommunityDetection Engine from factory");
-            _enrichmentEngine = fac.getEnrichmentEngine();
+            _enrichmentEngine = fac.getCommunityDetectionEngine();
             _logger.debug("Starting CommunityDetection Engine thread");
             _enrichmentEngineThread = new Thread(_enrichmentEngine);
             _enrichmentEngineThread.start();
             _logger.debug("CommunityDetection Engine thread running id => " + Long.toString(_enrichmentEngineThread.getId()));
-            Configuration.getInstance().setEnrichmentEngine(_enrichmentEngine);
+            Configuration.getInstance().setCommunityDetectionEngine(_enrichmentEngine);
         }
         catch(CommunityDetectionException ex){
             _logger.error("Unable to start enrichment engine", ex);

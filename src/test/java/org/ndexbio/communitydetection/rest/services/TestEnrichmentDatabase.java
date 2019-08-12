@@ -54,7 +54,7 @@ public class TestEnrichmentDatabase {
 
             MockHttpResponse response = new MockHttpResponse();
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
-            Configuration.getInstance().setEnrichmentEngine(null);
+            Configuration.getInstance().setCommunityDetectionEngine(null);
             dispatcher.invoke(request, response);
             assertEquals(500, response.getStatus());
             ObjectMapper mapper = new ObjectMapper();
@@ -92,7 +92,7 @@ public class TestEnrichmentDatabase {
             
             expect(mockEngine.getDatabaseResults()).andReturn(null);
             replay(mockEngine);
-            Configuration.getInstance().setEnrichmentEngine(mockEngine);
+            Configuration.getInstance().setCommunityDetectionEngine(mockEngine);
             dispatcher.invoke(request, response);
             assertEquals(500, response.getStatus());
             ObjectMapper mapper = new ObjectMapper();
@@ -134,7 +134,7 @@ public class TestEnrichmentDatabase {
             dr.setResults(Arrays.asList(singledr));
             expect(mockEngine.getDatabaseResults()).andReturn(dr);
             replay(mockEngine);
-            Configuration.getInstance().setEnrichmentEngine(mockEngine);
+            Configuration.getInstance().setCommunityDetectionEngine(mockEngine);
             dispatcher.invoke(request, response);
             assertEquals(200, response.getStatus());
             ObjectMapper mapper = new ObjectMapper();

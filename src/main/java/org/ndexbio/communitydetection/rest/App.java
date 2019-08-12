@@ -1,30 +1,16 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.ndexbio.communitydetection.rest;
 
 
 import ch.qos.logback.classic.Level;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Properties;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -129,18 +115,8 @@ public class App {
                 return;
             }
             if (mode.equals(EXAMPLE_DBRES_MODE)){
-                System.out.println(generateExampleDatabaseResults());
+                System.out.println("TODO");
                 System.out.flush();
-                return;
-            }
-            
-            if (mode.equals(CREATEDB_MODE)){
-                if (optionSet.has(CONF) == false){
-                    throw new CommunityDetectionException("--" + CONF + " required for --" + MODE + " mode");
-                }
-                Configuration.setAlternateConfigurationFile(optionSet.valueOf(CONF).toString());
-                downloadNetworks();
-                
                 return;
             }
             
@@ -208,57 +184,7 @@ public class App {
         props.load(new FileInputStream(path));
         return props;
     }
-    
-    /**
-     * Generates an example databaseresults.json 
-     * @return String of example databaseresults.json
-     * @throws Exception 
-     */
-    public static String generateExampleDatabaseResults() throws Exception {
-        DatabaseResult dr = new DatabaseResult();
-        dr.setDescription("This is a description of a signor database");
-        dr.setName("signor");
-        dr.setNumberOfNetworks("50");
-        dr.setImageURL("http://signor.uniroma2.it/img/signor_logo.png");
-        String druuid = "89a90a24-2fa8-4a57-ae4b-7c30a180e8e6";
-        dr.setUuid(druuid);
-        
-        DatabaseResult drtwo = new DatabaseResult();
-        drtwo.setDescription("This is a description of a ncipid database");
-        drtwo.setName("ncipid");
-        drtwo.setNumberOfNetworks("200");
-        drtwo.setImageURL("http://www.home.ndexbio.org/img/pid-logo-ndex.jpg");
-        //drtwo.setImageurl("http://ndexbio.org/images/new_landing_page_logo.06974471.png");
-        String drtwouuid = "e508cf31-79af-463e-b8b6-ff34c87e1734";
-        drtwo.setUuid(drtwouuid);
-        
-        InternalDatabaseResults idr = new InternalDatabaseResults();
-        
-        idr.setResults(Arrays.asList(dr, drtwo));
-        HashMap<String, InternalNdexConnectionParams> ndexParam = new HashMap<>();
-        InternalNdexConnectionParams cParam = new InternalNdexConnectionParams();
-        cParam.setPassword("somepassword");
-        cParam.setUser("bob");
-        cParam.setServer("dev.ndexbio.org");
-        cParam.setNetworkSetId("f884cd40-5426-49e6-a311-fc046802b5f6");
-        ndexParam.put(druuid, cParam);
-        
-        cParam = new InternalNdexConnectionParams();
-        cParam.setPassword("somepassword");
-        cParam.setUser("bob");
-        cParam.setServer("dev.ndexbio.org");
-        cParam.setNetworkSetId("bf0616dd-5d7e-403a-92f3-6e12cc02eb37");
-        ndexParam.put(drtwouuid, cParam);
-        idr.setDatabaseConnectionMap(ndexParam);
-        
-        HashSet<String> excludeNetworks = new HashSet<>();
-        excludeNetworks.add("309e834a-3005-41f2-8d28-46f2594aaaa8");
-        excludeNetworks.add("4671adc9-670d-474c-84db-37774fc885ba");
-        idr.setNetworksToExclude(excludeNetworks);
-        ObjectMapper mappy = new ObjectMapper();
-        
-        return mappy.writerWithDefaultPrettyPrinter().writeValueAsString(idr);
-    }
+   
     /**
      * Generates example Configuration file writing to standard out
      * @throws Exception 
@@ -289,238 +215,5 @@ public class App {
         sb.append(App.RUNSERVER_LOGLEVEL + " = INFO\n");
 
         return sb.toString();
-    }
-    
-    public static NdexRestClientModelAccessLayer getNdexClient(InternalNdexConnectionParams params) throws Exception {
-        NdexRestClient nrc = new NdexRestClient(params.getUser(), params.getPassword(), 
-                params.getServer(), "Enrichment/0.4.0");
-        
-        return new NdexRestClientModelAccessLayer(nrc);
-    }
-    public static void downloadNetworks() throws Exception {
-        Configuration config = Configuration.getInstance();
-        InternalDatabaseResults idr = config.getNDExDatabases();
-        ObjectMapper mappy = new ObjectMapper();
-        Set<String> universeUniqueGeneSet = new HashSet<>();
-        List<InternalGeneMap> geneMapList = new LinkedList<InternalGeneMap>();
-        Map<String, Integer> databaseUniqueGeneCount = new HashMap<>();
-        Set<String> networksToExclude = idr.getNetworksToExclude();
-        for (DatabaseResult dr : idr.getResults()){
-            _logger.debug("Downloading networks for: " + dr.getName());
-            InternalGeneMap geneMap = new InternalGeneMap();
-            geneMap.setDatabaseUUID(dr.getUuid());
-            
-            InternalNdexConnectionParams cParams = idr.getDatabaseConnectionMap().get(dr.getUuid());
-            
-            _logger.debug("networkset id for maps is: " + cParams.getNetworkSetId());
-            File databasedir = new File(config.getEnrichmentDatabaseDirectory() + File.separator + dr.getUuid());
-            if (databasedir.isDirectory() == false){
-                _logger.debug("Creating directory " + databasedir.getAbsolutePath());
-                databasedir.mkdirs();
-            }
-            NdexRestClientModelAccessLayer client = getNdexClient(cParams);
-            NetworkSet ns = client.getNetworkSetById(UUID.fromString(cParams.getNetworkSetId()), null);
-            if (ns == null){
-                throw new EnrichmentException("null returned when querying for networks "
-                                              + "in networkset returned null: " +
-                                              cParams.getNetworkSetId()+ " with uuid: " +
-                                              dr.getUuid());
-            }
-            _logger.debug("Found " + ns.getNetworks().size() + " networks");
-            if (ns.getNetworks().size() <= 0){
-                throw new EnrichmentException("No networks found in networkset: " +
-                                              cParams.getNetworkSetId()+ " with uuid: " +
-                                              dr.getUuid());
-            }
-            int networkCount = 0;
-            
-            Set<String> uniqueGeneSet = new HashSet<>();
-            for (UUID netid :  ns.getNetworks()){
-                if (networksToExclude.contains(netid.toString())){
-                    _logger.debug("Network: " + netid.toString() + " in exclude list. skipping.");
-                    continue;
-                }
-               
-                _logger.debug("Saving network: " + netid.toString());
-                NiceCXNetwork network = saveNetwork(client, netid, databasedir);
-                updateGeneMap(network, netid.toString(), geneMap,
-                        uniqueGeneSet, idr);
-                networkCount++;
-            }
-            client.getNdexRestClient().signOut();
-            dr.setNumberOfNetworks(Integer.toString(networkCount));
-            universeUniqueGeneSet.addAll(uniqueGeneSet);
-            geneMapList.add(geneMap);
-            databaseUniqueGeneCount.put(dr.getUuid(), uniqueGeneSet.size());
-            uniqueGeneSet.clear();
-        }
-        idr.setUniverseUniqueGeneCount(universeUniqueGeneSet.size());
-        idr.setDatabaseUniqueGeneCount(databaseUniqueGeneCount);
-        idr.setGeneMapList(geneMapList);
-        _logger.debug("Attempting to write: " + config.getDatabaseResultsFile().getAbsolutePath());
-        mappy.writerWithDefaultPrettyPrinter().writeValue(config.getDatabaseResultsFile(), idr);
-        return;
-    }
-    
-    /**
-     * Adds network to gene map which has the following structure:
-     * 
-     * gene names => [ list of network UUIDs for networks that have this gene]
-     * 
-     * 
-     * @param network network to examine
-     * @param externalId id of network passed in
-     * @param geneMap gene names => [ list of network UUIDs]
-     * @param uniqueGeneSet unique set of genes
-     * @throws Exception 
-     */
-    public static void updateGeneMap(final NiceCXNetwork network,
-            final String externalId, InternalGeneMap geneMap,
-            final Set<String> uniqueGeneSet,
-            InternalDatabaseResults idr) throws Exception {
-        
-        Map<Long, Collection<NodeAttributesElement>> attribMap = network.getNodeAttributes();
-        Map<String, Set<String>> mappy = geneMap.getGeneMap();
-        if (mappy == null){
-            _logger.debug("Adding mappy");
-            mappy = new HashMap<>();
-            geneMap.setGeneMap((Map<String, Set<String>>)mappy);
-        }
-        
-        Map<String, Set<Long>> geneToNodeMap = new HashMap<>();
-        for (NodesElement ne : network.getNodes().values()){
-            Collection<NodeAttributesElement> nodeAttribs = attribMap.get(ne.getId());
-            
-            // If there are node attributes and one is named "type" then
-            // only include the node name if type is gene or protein
-            if (nodeAttribs == null){
-                continue;
-            }
-            boolean validgene = false;
-            boolean validcomplex = false;
-            for (NodeAttributesElement nae : nodeAttribs){
-                if (nae.getName().toLowerCase().equals("type")){
-                    if (nae.getValue().toLowerCase().equals("gene") ||
-                          nae.getValue().toLowerCase().equals("protein") ||
-                            nae.getValue().toLowerCase().equals("geneproduct")){
-                        validgene = true;
-                        break;
-                    }
-                    if (nae.getValue().toLowerCase().equals("complex") ||
-                          nae.getValue().toLowerCase().equals("proteinfamily") ||
-                          nae.getValue().toLowerCase().equals("compartment")){
-                        validcomplex = true;
-                        break;
-                    }
-                }
-            }
-            if (validgene == true){
-                String name = getValidGene(ne.getNodeName());
-                if (name == null){
-                    continue;
-                }
-                if (mappy.containsKey(name) == false){
-                    mappy.put(name, new HashSet<String>());
-                }
-                if (mappy.get(name).contains(externalId) == false){
-                    mappy.get(name).add(externalId);
-                }
-                if (geneToNodeMap.containsKey(name) == false){
-                    geneToNodeMap.put(name, new HashSet<Long>());
-                }
-                geneToNodeMap.get(name).add(ne.getId());
-                
-                uniqueGeneSet.add(name);
-                continue;
-            }
-            if (validcomplex == true){
-                for (NodeAttributesElement nae : nodeAttribs){
-                    if (nae.getName().toLowerCase().equals("member")){
-                        for (String entry : nae.getValues()){
-                            String name = getValidGene(entry);
-                            if (name == null){
-                                continue;
-                            }
-                            if (mappy.containsKey(name) == false){
-                                mappy.put(name, new HashSet<String>());
-                            }
-                            if (mappy.get(name).contains(externalId) == false){
-                                mappy.get(name).add(externalId);
-                            }
-                            if (geneToNodeMap.containsKey(name) == false){
-                                geneToNodeMap.put(name, new HashSet<Long>());
-                            }
-                            geneToNodeMap.get(name).add(ne.getId());
-                            uniqueGeneSet.add(entry);
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-        if (geneToNodeMap.size() > 0){
-            Map<String, Map<String, Set<Long>>> geneToNodeBigMap = idr.getNetworkToGeneToNodeMap();
-            if (geneToNodeBigMap == null){
-                geneToNodeBigMap = new HashMap<String, Map<String, Set<Long>>>();
-            } else 
-            geneToNodeBigMap.put(externalId, geneToNodeMap);
-            idr.setNetworkToGeneToNodeMap(geneToNodeBigMap);
-        }
-
-    }
-    
-    public static String getValidGene(final String potentialGene){
-        if (potentialGene == null){
-            _logger.warn("Gene passed in is null");
-            return null;
-        }
-        String strippedGene = potentialGene;
-        // strip off hgnc.symbol: prefix if found
-        if (potentialGene.startsWith("hgnc.symbol:") && potentialGene.length()>12){
-            strippedGene = potentialGene.substring(potentialGene.indexOf(":") + 1);
-        }
-        
-        if (strippedGene.length()>30 || !strippedGene.matches("^[^\\(\\)\\s,']+$")){
-            _logger.warn("Gene: " + strippedGene + " does not appear to be valid. Skipping...");
-            return null;
-        }
-        return strippedGene;
-    }
-    /**
-     * Saves network with 'networkuuid' to directory specified by 'savedir'
-     * with the name 'networkuuid'.cx
-     * @param client NDEx java client used to get network from NDEx
-     * @param networkuuid id of network to download
-     * @param savedir directory to write network.
-     * @return NiceCXNetwork network downloaded
-     * @throws Exception 
-     */
-    public static NiceCXNetwork saveNetwork(NdexRestClientModelAccessLayer client, final UUID networkuuid, final File savedir) throws Exception{
-        Configuration config = Configuration.getInstance();
-        File dest = new File(savedir.getAbsolutePath() + File.separator + networkuuid.toString() + ".cx");
-        
-        FileOutputStream fos = new FileOutputStream(dest);
-        InputStream instream = client.getNetworkAsCXStream(networkuuid);
-        byte[] buffer = new byte[8 * 1024];
-        int bytesRead;
-        while ((bytesRead = instream.read(buffer)) != -1) {
-            fos.write(buffer, 0, bytesRead);
-        }
-        try {
-            instream.close();
-        }
-        catch(IOException ex){
-            _logger.error("error closing input stream", ex);
-        }
-        try {
-            fos.close();
-        }
-        catch(IOException ex){
-            _logger.error("error closing output stream", ex);
-        }
-        
-        ObjectMapper mappy = new ObjectMapper();
-        FileInputStream fis = new FileInputStream(dest);
-        return NdexRestClientUtilities.getCXNetworkFromStream(fis);
     }
 }

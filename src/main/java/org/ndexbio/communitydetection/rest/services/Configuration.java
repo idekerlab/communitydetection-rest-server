@@ -15,36 +15,28 @@ import org.ndexbio.communitydetection.rest.engine.CommunityDetectionEngine;
 
 /**
  * Contains configuration for Enrichment. The configuration
- * is extracted by looking for a file under the environment
- * variable NDEX_ENRICH_CONFIG and if that fails defaults are
- * used
+ is extracted by looking for a file under the environment
+ variable COMMUNITY_DETECTION_CONFIG and if that fails defaults are
+ used
  * @author churas
  */
 public class Configuration {
     
     public static final String APPLICATION_PATH = "/communitydetection";
     public static final String V_ONE_PATH = "/v1";
-    public static final String NDEX_ENRICH_CONFIG = "NDEX_ENRICH_CONFIG";
+    public static final String COMMUNITY_DETECTION_CONFIG = "COMMUNITY_DETECTION_CONFIG";
     
-    public static final String DATABASE_DIR = "enrichment.database.dir";
-    public static final String TASK_DIR = "enrichment.task.dir";
-    public static final String HOST_URL = "enrichment.host.url";
-    
-    public static final String NDEX_USER = "ndex.user";
-    public static final String NDEX_PASS = "ndex.password";
-    public static final String NDEX_SERVER = "ndex.server";
-    public static final String NDEX_USERAGENT = "ndex.useragent";
-    
-    
-    public static final String DATABASE_RESULTS_JSON_FILE = "databaseresults.json";
+    public static final String DATABASE_DIR = "communitydetection.database.dir";
+    public static final String TASK_DIR = "communitydetection.task.dir";
+    public static final String HOST_URL = "communitydetection.host.url";    
     
     private static Configuration INSTANCE;
     private static final Logger _logger = LoggerFactory.getLogger(Configuration.class);
     private static String _alternateConfigurationFile;
-    private static CommunityDetectionEngine _enrichmentEngine;
-    private static String _enrichDatabaseDir;
-    private static String _enrichTaskDir;
-    private static String _enrichHostURL;
+    private static CommunityDetectionEngine _communityEngine;
+    private static String _databaseDir;
+    private static String _taskDir;
+    private static String _hostURL;
     /**
      * Constructor that attempts to get configuration from properties file
      * specified via configPath
@@ -67,21 +59,21 @@ public class Configuration {
                      " : " + io);
         }
         
-        _enrichDatabaseDir = props.getProperty(Configuration.DATABASE_DIR, "/tmp");
-        _enrichTaskDir = props.getProperty(Configuration.TASK_DIR, "/tmp");
-        _enrichHostURL = props.getProperty(Configuration.HOST_URL, "");
-        if (_enrichHostURL.trim().isEmpty()){
-            _enrichHostURL = "";
-        } else if (!_enrichHostURL.endsWith("/")){
-            _enrichHostURL =_enrichHostURL + "/";
+        _databaseDir = props.getProperty(Configuration.DATABASE_DIR, "/tmp");
+        _taskDir = props.getProperty(Configuration.TASK_DIR, "/tmp");
+        _hostURL = props.getProperty(Configuration.HOST_URL, "");
+        if (_hostURL.trim().isEmpty()){
+            _hostURL = "";
+        } else if (!_hostURL.endsWith("/")){
+            _hostURL =_hostURL + "/";
         }
     }
         
-    protected void setEnrichmentEngine(CommunityDetectionEngine ee){
-        _enrichmentEngine = ee;
+    protected void setCommunityDetectionEngine(CommunityDetectionEngine ee){
+        _communityEngine = ee;
     }
-    public CommunityDetectionEngine getEnrichmentEngine(){
-        return _enrichmentEngine;
+    public CommunityDetectionEngine getCommunityDetectionEngine(){
+        return _communityEngine;
     }
 
     /**
@@ -90,44 +82,23 @@ public class Configuration {
      *         string if not is set
      */
     public String getHostURL(){
-        return _enrichHostURL;
+        return _hostURL;
     }
     
     /**
      * Gets directory where enrichment database is stored on the file system
      * @return 
      */
-    public String getEnrichmentDatabaseDirectory(){
-        return _enrichDatabaseDir;
+    public String getDatabaseDirectory(){
+        return _databaseDir;
     }
     
     /**
      * Gets directory where enrichment task results should be stored
      * @return 
      */
-    public String getEnrichmentTaskDirectory(){
-        return _enrichTaskDir;
-    }
-
-    public File getDatabaseResultsFile(){
-        
-        return new File(getEnrichmentDatabaseDirectory() + File.separator +
-                              Configuration.DATABASE_RESULTS_JSON_FILE);
-    }
-    /**
-     * 
-     * @return 
-     */
-    public InternalDatabaseResults getNDExDatabases(){
-        ObjectMapper mapper = new ObjectMapper();
-        File dbres = getDatabaseResultsFile();
-        try {
-            return mapper.readValue(dbres, InternalDatabaseResults.class);
-        }
-        catch(IOException io){
-            _logger.error("caught io exception trying to load " + dbres.getAbsolutePath(), io);
-        }
-        return null;
+    public String getTaskDirectory(){
+        return _taskDir;
     }
     
     /**
@@ -146,14 +117,14 @@ public class Configuration {
                     _logger.info("Alternate configuration path specified: " + configPath);
                 } else {
                     try {
-                        configPath = System.getenv(Configuration.NDEX_ENRICH_CONFIG);
+                        configPath = System.getenv(Configuration.COMMUNITY_DETECTION_CONFIG);
                     } catch(SecurityException se){
                         _logger.error("Caught security exception ", se);
                     }
                 }
                 if (configPath == null){
                     InitialContext ic = new InitialContext();
-                    configPath = (String) ic.lookup("java:comp/env/" + Configuration.NDEX_ENRICH_CONFIG); 
+                    configPath = (String) ic.lookup("java:comp/env/" + Configuration.COMMUNITY_DETECTION_CONFIG); 
 
                 }
                 INSTANCE = new Configuration(configPath);
