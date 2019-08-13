@@ -18,9 +18,9 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.ndexbio.enrichment.rest.model.ErrorResponse;
-import org.ndexbio.enrichment.rest.model.ServerStatus;
-import org.ndexbio.enrichment.rest.model.exceptions.EnrichmentException;
+import org.ndexbio.communitydetection.rest.model.ErrorResponse;
+import org.ndexbio.communitydetection.rest.model.ServerStatus;
+import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionException;
 import org.ndexbio.communitydetection.rest.engine.CommunityDetectionEngine;
 
 
@@ -138,7 +138,7 @@ public class TestStatus {
             
             // create mock enrichment engine that returns null
             CommunityDetectionEngine mockEngine = createMock(CommunityDetectionEngine.class);
-            expect(mockEngine.getServerStatus()).andThrow(new EnrichmentException("hi"));
+            expect(mockEngine.getServerStatus()).andThrow(new CommunityDetectionException("hi"));
             replay(mockEngine);
             
             Configuration.getInstance().setCommunityDetectionEngine(mockEngine);

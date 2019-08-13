@@ -1,11 +1,5 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.ndexbio.communitydetection.rest.engine;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -14,6 +8,7 @@ import static org.junit.Assert.*;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionException;
 import org.ndexbio.communitydetection.rest.services.Configuration;
 
 /**
@@ -36,7 +31,7 @@ public class TestConfiguration {
             try {
                 Configuration config = Configuration.reloadConfiguration();
                 fail("Expected EnrichmentException");
-            } catch(EnrichmentException ee){
+            } catch(CommunityDetectionException ee){
                 assertTrue(ee.getMessage().contains("FileNotFound Exception"));
             }
         } finally {
@@ -45,7 +40,7 @@ public class TestConfiguration {
     }
     
     @Test
-    public void testConfigurationAlternatePathNoMatchingProps() throws EnrichmentException, IOException {
+    public void testConfigurationAlternatePathNoMatchingProps() throws CommunityDetectionException, IOException {
         File tempDir = _folder.newFolder();
         try {
             File configFile = new File(tempDir.getAbsolutePath() + File.separator + "conf");
@@ -59,17 +54,14 @@ public class TestConfiguration {
             Configuration config = Configuration.reloadConfiguration();
             assertEquals("/tmp", config.getDatabaseDirectory());
             assertEquals("/tmp", config.getTaskDirectory());
-            assertNull(config.getNDExDatabases());
             assertNull(config.getCommunityDetectionEngine());
-            assertEquals(File.separator + "tmp" + File.separator + Configuration.DATABASE_RESULTS_JSON_FILE,
-                         config.getDatabaseResultsFile().getAbsolutePath());
         } finally {
             _folder.delete();
         }
     }
     
     @Test
-    public void testConfigurationValidConfiguration() throws EnrichmentException, IOException {
+    public void testConfigurationValidConfiguration() throws CommunityDetectionException, IOException {
         File tempDir = _folder.newFolder();
         try {
             File configFile = new File(tempDir.getAbsolutePath() + File.separator + "conf");
@@ -77,8 +69,6 @@ public class TestConfiguration {
             Properties props = new Properties();
             props.setProperty(Configuration.DATABASE_DIR, tempDir.getAbsolutePath());
             props.setProperty(Configuration.TASK_DIR, taskDir.getAbsolutePath());
-            props.setProperty(Configuration.NDEX_SERVER, "server");
-            props.setProperty(Configuration.NDEX_USERAGENT, "agent");
             FileOutputStream fos = new FileOutputStream(configFile);
             props.store(fos, "hello");
             fos.flush();
@@ -88,16 +78,6 @@ public class TestConfiguration {
             assertEquals(tempDir.getAbsolutePath(), config.getDatabaseDirectory());
             assertEquals(taskDir.getAbsolutePath(), config.getTaskDirectory());
             assertNull(config.getCommunityDetectionEngine());
-            assertEquals(tempDir.getAbsolutePath() + File.separator + Configuration.DATABASE_RESULTS_JSON_FILE,
-                         config.getDatabaseResultsFile().getAbsolutePath());
-            ObjectMapper mapper = new ObjectMapper();
-            
-            InternalDatabaseResults idr = new InternalDatabaseResults();
-            idr.setUniverseUniqueGeneCount(10);
-            mapper.writeValue(config.getDatabaseResultsFile(), idr);
-
-            InternalDatabaseResults residr = config.getNDExDatabases();
-            assertEquals(idr.getUniverseUniqueGeneCount(), residr.getUniverseUniqueGeneCount());
         } finally {
             _folder.delete();
         }

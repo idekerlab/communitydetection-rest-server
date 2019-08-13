@@ -9,9 +9,9 @@ import org.slf4j.LoggerFactory;
  *
  * @author churas
  */
-public class BasicEnrichmentEngineFactory {
+public class BasicCommunityDetectionEngineFactory {
     
-    static Logger _logger = LoggerFactory.getLogger(BasicEnrichmentEngineFactory.class);
+    static Logger _logger = LoggerFactory.getLogger(BasicCommunityDetectionEngineFactory.class);
 
     private String _dbDir;
     private String _taskDir;
@@ -20,7 +20,7 @@ public class BasicEnrichmentEngineFactory {
      * Temp directory where query results will temporarily be stored.
      * @param tmpDir 
      */
-    public BasicEnrichmentEngineFactory(Configuration config){
+    public BasicCommunityDetectionEngineFactory(Configuration config){
         
         _dbDir = config.getDatabaseDirectory();
         _taskDir = config.getTaskDirectory();
@@ -32,8 +32,8 @@ public class BasicEnrichmentEngineFactory {
      * @return 
      */
     public CommunityDetectionEngine getCommunityDetectionEngine() throws CommunityDetectionException {
-        CommunityDetectionEngineImpl enricher = new CommunityDetectionEngineImpl(_dbDir,
+        CommunityDetectionEngineImpl engine = new CommunityDetectionEngineImpl(_dbDir,
                 _taskDir);
-        return enricher;
+        return engine;
     }
 }

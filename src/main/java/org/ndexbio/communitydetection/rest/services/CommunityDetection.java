@@ -46,7 +46,7 @@ public class CommunityDetection {
     @Path("/")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Submits community detection task",
+    @Operation(summary = "Submits Community Detection task",
                description="Payload in JSON will have edgelist along with algorithm to run and any algorithm specific parameters\n" +
 "\n" +
 "The service should upon post return 202 and set location to resource to poll for result. Which will\n" +
@@ -92,7 +92,7 @@ public class CommunityDetection {
     @GET 
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Gets result of enrichment",
+    @Operation(summary = "Gets result of Community Detection task",
                description="NOTE: For incomplete/failed jobs only Status, message, progress, and walltime will\n" +
 "be returned in JSON",
                responses = {
@@ -106,7 +106,7 @@ public class CommunityDetection {
                                 content = @Content(mediaType = MediaType.APPLICATION_JSON,
                                 schema = @Schema(implementation = ErrorResponse.class)))
                })
-    public Response getEnrichmentQueryResults(@PathParam("id") final String id,
+    public Response getResult(@PathParam("id") final String id,
             @Parameter(description = "Starting index of result, should be an integer 0 or larger") @QueryParam("start") int start,
             @Parameter(description = "Number of results to return, 0 for all") @QueryParam("size") int size) {
         ObjectMapper omappy = new ObjectMapper();
@@ -132,7 +132,7 @@ public class CommunityDetection {
     @GET 
     @Path("/{id}/status")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Gets status of enrichment",
+    @Operation(summary = "Gets status of Community Detection task",
                description="This lets caller get status without getting the full result back",
                responses = {
                    @ApiResponse(responseCode = "200",

@@ -11,7 +11,7 @@ import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import javax.servlet.ServletException;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
-import org.ndexbio.communitydetection.rest.engine.BasicEnrichmentEngineFactory;
+import org.ndexbio.communitydetection.rest.engine.BasicCommunityDetectionEngineFactory;
 import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +40,7 @@ public class CommunityDetectionHttpServletDispatcher extends HttpServletDispatch
     protected void createAndStartEnrichmentEngine() throws CommunityDetectionException {
         
         try {
-            BasicEnrichmentEngineFactory fac = new BasicEnrichmentEngineFactory(Configuration.getInstance());
+            BasicCommunityDetectionEngineFactory fac = new BasicCommunityDetectionEngineFactory(Configuration.getInstance());
             _logger.debug("Creating CommunityDetection Engine from factory");
             _enrichmentEngine = fac.getCommunityDetectionEngine();
             _logger.debug("Starting CommunityDetection Engine thread");

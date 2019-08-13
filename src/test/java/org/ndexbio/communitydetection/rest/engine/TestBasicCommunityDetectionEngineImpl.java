@@ -20,12 +20,12 @@ import org.junit.Test;
  *
  * @author churas
  */
-public class TestBasicEnrichmentEngineImpl {
+public class TestBasicCommunityDetectionEngineImpl {
     
     public Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
     
     
-    public TestBasicEnrichmentEngineImpl() {
+    public TestBasicCommunityDetectionEngineImpl() {
     }
    
     @Test

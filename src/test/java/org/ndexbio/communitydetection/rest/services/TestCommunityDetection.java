@@ -8,9 +8,12 @@ package org.ndexbio.communitydetection.rest.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.FileWriter;
-import java.util.Arrays;
+import java.net.URI;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.notNull;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import org.jboss.resteasy.core.Dispatcher;
@@ -21,22 +24,25 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.ndexbio.enrichment.rest.model.DatabaseResult;
-import org.ndexbio.enrichment.rest.model.DatabaseResults;
-import org.ndexbio.enrichment.rest.model.ErrorResponse;
 import org.ndexbio.communitydetection.rest.engine.CommunityDetectionEngine;
+import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequest;
+import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequestStatus;
+import org.ndexbio.communitydetection.rest.model.CommunityDetectionResult;
+import org.ndexbio.communitydetection.rest.model.ErrorResponse;
+import org.ndexbio.communitydetection.rest.model.Task;
+import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionException;
 
 /**
  *
  * @author churas
  */
-public class TestEnrichmentDatabase {
+public class TestCommunityDetection {
     
     @Rule
     public TemporaryFolder _folder = new TemporaryFolder();
    
     @Test
-    public void testGetDatabaseResultsWhereEnrichmentEngineNotLoaded() throws Exception {
+    public void testRequestEnrichmentWhereEnrichmentEngineNotLoaded() throws Exception {
         try {
             File tempDir = _folder.newFolder();
             File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
@@ -48,9 +54,15 @@ public class TestEnrichmentDatabase {
             fw.flush();
             fw.close();
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new EnrichmentDatabase());
+            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
-            MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/database");
+            MockHttpRequest request = MockHttpRequest.post(Configuration.V_ONE_PATH);
+            CommunityDetectionRequest query = new CommunityDetectionRequest();
+            ObjectMapper omappy = new ObjectMapper();
+            request.contentType(MediaType.APPLICATION_JSON);
+            
+            request.content(omappy.writeValueAsBytes(query));
+
 
             MockHttpResponse response = new MockHttpResponse();
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
@@ -60,94 +72,13 @@ public class TestEnrichmentDatabase {
             ObjectMapper mapper = new ObjectMapper();
             ErrorResponse er = mapper.readValue(response.getOutput(),
                     ErrorResponse.class);
-            assertEquals("Error querying for databases", er.getMessage());
+            assertEquals("Error requesting enrichment", er.getMessage());
             assertEquals("Enrichment Engine not loaded", er.getDescription());
         } finally {
             _folder.delete();
         }
     }
     
-    @Test
-    public void testGetDatabaseResultsReturnsNull() throws Exception {
-        try {
-            File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new EnrichmentDatabase());
-
-            MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/database");
-
-            MockHttpResponse response = new MockHttpResponse();
-            Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
-            
-            // create mock enrichment engine that returns null
-            CommunityDetectionEngine mockEngine = createMock(CommunityDetectionEngine.class);
-            
-            expect(mockEngine.getDatabaseResults()).andReturn(null);
-            replay(mockEngine);
-            Configuration.getInstance().setCommunityDetectionEngine(mockEngine);
-            dispatcher.invoke(request, response);
-            assertEquals(500, response.getStatus());
-            ObjectMapper mapper = new ObjectMapper();
-            ErrorResponse er = mapper.readValue(response.getOutput(),
-                    ErrorResponse.class);
-            assertEquals("Error querying for databases", er.getMessage());
-            assertEquals("DatabaseResults is null", er.getDescription());
-            verify(mockEngine);
-        } finally {
-            _folder.delete();
-        }
-    }
-    
-    @Test
-    public void testGetDatabaseResultsSuccess() throws Exception {
-        try {
-            File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new EnrichmentDatabase());
-
-            MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/database");
-
-            MockHttpResponse response = new MockHttpResponse();
-            Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
-            
-            // create mock enrichment engine that returns null
-            CommunityDetectionEngine mockEngine = createMock(CommunityDetectionEngine.class);
-            DatabaseResults dr = new DatabaseResults();
-            DatabaseResult singledr = new DatabaseResult();
-            singledr.setName("hi");
-            dr.setResults(Arrays.asList(singledr));
-            expect(mockEngine.getDatabaseResults()).andReturn(dr);
-            replay(mockEngine);
-            Configuration.getInstance().setCommunityDetectionEngine(mockEngine);
-            dispatcher.invoke(request, response);
-            assertEquals(200, response.getStatus());
-            ObjectMapper mapper = new ObjectMapper();
-            DatabaseResults res = mapper.readValue(response.getOutput(),
-                    DatabaseResults.class);
-            assertEquals("hi", res.getResults().get(0).getName());
-            verify(mockEngine);
-        } finally {
-            _folder.delete();
-        }
-    }
-    
-    /**
     @Test
     public void testRequestEnrichmentWhereQueryRaisesError() throws Exception {
         try {
@@ -161,10 +92,10 @@ public class TestEnrichmentDatabase {
             fw.flush();
             fw.close();
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new Enrichment());
+            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
             MockHttpRequest request = MockHttpRequest.post(Configuration.V_ONE_PATH);
-            EnrichmentQuery query = new EnrichmentQuery();
+            CommunityDetectionRequest query = new CommunityDetectionRequest();
             ObjectMapper omappy = new ObjectMapper();
             request.contentType(MediaType.APPLICATION_JSON);
             
@@ -175,10 +106,10 @@ public class TestEnrichmentDatabase {
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
             
             // create mock enrichment engine that returns null
-            EnrichmentEngine mockEngine = createMock(EnrichmentEngine.class);
-            expect(mockEngine.query(notNull())).andThrow(new EnrichmentException("some error"));
+            CommunityDetectionEngine mockEngine = createMock(CommunityDetectionEngine.class);
+            expect(mockEngine.request(notNull())).andThrow(new CommunityDetectionException("some error"));
             replay(mockEngine);
-            Configuration.getInstance().setEnrichmentEngine(mockEngine);
+            Configuration.getInstance().setCommunityDetectionEngine(mockEngine);
             
             dispatcher.invoke(request, response);
             assertEquals(500, response.getStatus());
@@ -207,10 +138,10 @@ public class TestEnrichmentDatabase {
             fw.flush();
             fw.close();
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new Enrichment());
+            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
             MockHttpRequest request = MockHttpRequest.post(Configuration.V_ONE_PATH);
-            EnrichmentQuery query = new EnrichmentQuery();
+            CommunityDetectionRequest query = new CommunityDetectionRequest();
             ObjectMapper omappy = new ObjectMapper();
             request.contentType(MediaType.APPLICATION_JSON);
             
@@ -221,10 +152,10 @@ public class TestEnrichmentDatabase {
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
             
             // create mock enrichment engine that returns null
-            EnrichmentEngine mockEngine = createMock(EnrichmentEngine.class);
-            expect(mockEngine.query(notNull())).andReturn(null);
+            CommunityDetectionEngine mockEngine = createMock(CommunityDetectionEngine.class);
+            expect(mockEngine.request(notNull())).andReturn(null);
             replay(mockEngine);
-            Configuration.getInstance().setEnrichmentEngine(mockEngine);
+            Configuration.getInstance().setCommunityDetectionEngine(mockEngine);
             
             dispatcher.invoke(request, response);
             assertEquals(500, response.getStatus());
@@ -253,10 +184,10 @@ public class TestEnrichmentDatabase {
             fw.flush();
             fw.close();
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new Enrichment());
+            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
             MockHttpRequest request = MockHttpRequest.post(Configuration.V_ONE_PATH);
-            EnrichmentQuery query = new EnrichmentQuery();
+            CommunityDetectionRequest query = new CommunityDetectionRequest();
             ObjectMapper omappy = new ObjectMapper();
             request.contentType(MediaType.APPLICATION_JSON);
             
@@ -267,10 +198,10 @@ public class TestEnrichmentDatabase {
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
             
             // create mock enrichment engine that returns null
-            EnrichmentEngine mockEngine = createMock(EnrichmentEngine.class);
-            expect(mockEngine.query(notNull())).andReturn("12345");
+            CommunityDetectionEngine mockEngine = createMock(CommunityDetectionEngine.class);
+            expect(mockEngine.request(notNull())).andReturn("12345");
             replay(mockEngine);
-            Configuration.getInstance().setEnrichmentEngine(mockEngine);
+            Configuration.getInstance().setCommunityDetectionEngine(mockEngine);
             
             dispatcher.invoke(request, response);
             assertEquals(202, response.getStatus());
@@ -302,10 +233,10 @@ public class TestEnrichmentDatabase {
             fw.flush();
             fw.close();
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new Enrichment());
+            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
             MockHttpRequest request = MockHttpRequest.post(Configuration.V_ONE_PATH);
-            EnrichmentQuery query = new EnrichmentQuery();
+            CommunityDetectionRequest query = new CommunityDetectionRequest();
             ObjectMapper omappy = new ObjectMapper();
             request.contentType(MediaType.APPLICATION_JSON);
             
@@ -316,10 +247,10 @@ public class TestEnrichmentDatabase {
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
             
             // create mock enrichment engine that returns null
-            EnrichmentEngine mockEngine = createMock(EnrichmentEngine.class);
-            expect(mockEngine.query(notNull())).andReturn("12345");
+            CommunityDetectionEngine mockEngine = createMock(CommunityDetectionEngine.class);
+            expect(mockEngine.request(notNull())).andReturn("12345");
             replay(mockEngine);
-            Configuration.getInstance().setEnrichmentEngine(mockEngine);
+            Configuration.getInstance().setCommunityDetectionEngine(mockEngine);
             
             dispatcher.invoke(request, response);
             assertEquals(202, response.getStatus());
@@ -351,13 +282,13 @@ public class TestEnrichmentDatabase {
             fw.flush();
             fw.close();
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new Enrichment());
+            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
             MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/12345");
 
             MockHttpResponse response = new MockHttpResponse();
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
-            Configuration.getInstance().setEnrichmentEngine(null);
+            Configuration.getInstance().setCommunityDetectionEngine(null);
             dispatcher.invoke(request, response);
             assertEquals(500, response.getStatus());
             ObjectMapper mapper = new ObjectMapper();
@@ -384,7 +315,7 @@ public class TestEnrichmentDatabase {
             fw.flush();
             fw.close();
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new Enrichment());
+            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
             MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/12345");
 
@@ -392,23 +323,23 @@ public class TestEnrichmentDatabase {
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
             
             // create mock enrichment engine that returns null
-            EnrichmentEngine mockEngine = createMock(EnrichmentEngine.class);
-            expect(mockEngine.getQueryResults("12345", 0, 0)).andReturn(null);
+            CommunityDetectionEngine mockEngine = createMock(CommunityDetectionEngine.class);
+            expect(mockEngine.getResult("12345")).andReturn(null);
             replay(mockEngine);
-            Configuration.getInstance().setEnrichmentEngine(mockEngine);
+            Configuration.getInstance().setCommunityDetectionEngine(mockEngine);
             
             dispatcher.invoke(request, response);
             assertEquals(410, response.getStatus());
             verify(mockEngine);
         } finally {
             _folder.delete();
-            Configuration.getInstance().setEnrichmentEngine(null);
+            Configuration.getInstance().setCommunityDetectionEngine(null);
 
         }
     }
     
     @Test
-    public void testGetWhereIdExistsAndStartSizeSet() throws Exception {
+    public void testGetWhereIdExists() throws Exception {
 
         try {
             File tempDir = _folder.newFolder();
@@ -421,7 +352,7 @@ public class TestEnrichmentDatabase {
             fw.flush();
             fw.close();
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new Enrichment());
+            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
             MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH +
                                                           "/12345?start=1&size=2");
@@ -430,23 +361,23 @@ public class TestEnrichmentDatabase {
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
             
             // create mock enrichment engine that returns null
-            EnrichmentEngine mockEngine = createMock(EnrichmentEngine.class);
-            EnrichmentQueryResults eqr = new EnrichmentQueryResults();
-            eqr.setNumberOfHits(100);
-            expect(mockEngine.getQueryResults("12345", 1, 2)).andReturn(eqr);
+            CommunityDetectionEngine mockEngine = createMock(CommunityDetectionEngine.class);
+            CommunityDetectionResult eqr = new CommunityDetectionResult();
+            eqr.setMessage("hi");
+            expect(mockEngine.getResult("12345")).andReturn(eqr);
             replay(mockEngine);
-            Configuration.getInstance().setEnrichmentEngine(mockEngine);
+            Configuration.getInstance().setCommunityDetectionEngine(mockEngine);
             
             dispatcher.invoke(request, response);
             assertEquals(200, response.getStatus());
             ObjectMapper mapper = new ObjectMapper();
-            EnrichmentQueryResults res = mapper.readValue(response.getOutput(),
-                    EnrichmentQueryResults.class);
-            assertEquals(100, res.getNumberOfHits());
+            CommunityDetectionResult res = mapper.readValue(response.getOutput(),
+                    CommunityDetectionResult.class);
+            assertEquals("hi", res.getMessage());
             verify(mockEngine);
         } finally {
             _folder.delete();
-            Configuration.getInstance().setEnrichmentEngine(null);
+            Configuration.getInstance().setCommunityDetectionEngine(null);
         }
     }
     
@@ -464,13 +395,13 @@ public class TestEnrichmentDatabase {
             fw.flush();
             fw.close();
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new Enrichment());
+            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
             MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/12345/status");
 
             MockHttpResponse response = new MockHttpResponse();
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
-            Configuration.getInstance().setEnrichmentEngine(null);
+            Configuration.getInstance().setCommunityDetectionEngine(null);
 
             dispatcher.invoke(request, response);
             assertEquals(500, response.getStatus());
@@ -481,7 +412,7 @@ public class TestEnrichmentDatabase {
             assertEquals("Enrichment Engine not loaded", er.getDescription());
         } finally {
             _folder.delete();
-            Configuration.getInstance().setEnrichmentEngine(null);
+            Configuration.getInstance().setCommunityDetectionEngine(null);
 
         }
     }
@@ -500,7 +431,7 @@ public class TestEnrichmentDatabase {
             fw.flush();
             fw.close();
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new Enrichment());
+            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
             MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/12345/status");
 
@@ -508,17 +439,17 @@ public class TestEnrichmentDatabase {
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
             
             // create mock enrichment engine that returns null
-            EnrichmentEngine mockEngine = createMock(EnrichmentEngine.class);
-            expect(mockEngine.getQueryStatus("12345")).andReturn(null);
+            CommunityDetectionEngine mockEngine = createMock(CommunityDetectionEngine.class);
+            expect(mockEngine.getStatus("12345")).andReturn(null);
             replay(mockEngine);
-            Configuration.getInstance().setEnrichmentEngine(mockEngine);
+            Configuration.getInstance().setCommunityDetectionEngine(mockEngine);
             
             dispatcher.invoke(request, response);
             assertEquals(410, response.getStatus());
             verify(mockEngine);
         } finally {
             _folder.delete();
-            Configuration.getInstance().setEnrichmentEngine(null);
+            Configuration.getInstance().setCommunityDetectionEngine(null);
 
         }
     }
@@ -537,7 +468,7 @@ public class TestEnrichmentDatabase {
             fw.flush();
             fw.close();
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new Enrichment());
+            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
             MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH +
                                                           "/12345/status");
@@ -546,23 +477,23 @@ public class TestEnrichmentDatabase {
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
             
             // create mock enrichment engine that returns null
-            EnrichmentEngine mockEngine = createMock(EnrichmentEngine.class);
-            EnrichmentQueryStatus eqs = new EnrichmentQueryStatus();
+            CommunityDetectionEngine mockEngine = createMock(CommunityDetectionEngine.class);
+            CommunityDetectionRequestStatus eqs = new CommunityDetectionRequestStatus();
             eqs.setProgress(55);
-            expect(mockEngine.getQueryStatus("12345")).andReturn(eqs);
+            expect(mockEngine.getStatus("12345")).andReturn(eqs);
             replay(mockEngine);
-            Configuration.getInstance().setEnrichmentEngine(mockEngine);
+            Configuration.getInstance().setCommunityDetectionEngine(mockEngine);
             
             dispatcher.invoke(request, response);
             assertEquals(200, response.getStatus());
             ObjectMapper mapper = new ObjectMapper();
-            EnrichmentQueryStatus res = mapper.readValue(response.getOutput(),
-                    EnrichmentQueryStatus.class);
+            CommunityDetectionRequestStatus res = mapper.readValue(response.getOutput(),
+                    CommunityDetectionRequestStatus.class);
             assertEquals(55, res.getProgress());
             verify(mockEngine);
         } finally {
             _folder.delete();
-            Configuration.getInstance().setEnrichmentEngine(null);
+            Configuration.getInstance().setCommunityDetectionEngine(null);
         }
     }
     
@@ -580,13 +511,13 @@ public class TestEnrichmentDatabase {
             fw.flush();
             fw.close();
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new Enrichment());
+            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
             MockHttpRequest request = MockHttpRequest.delete(Configuration.V_ONE_PATH + "/12345");
 
             MockHttpResponse response = new MockHttpResponse();
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
-            Configuration.getInstance().setEnrichmentEngine(null);
+            Configuration.getInstance().setCommunityDetectionEngine(null);
 
             dispatcher.invoke(request, response);
             assertEquals(500, response.getStatus());
@@ -597,7 +528,7 @@ public class TestEnrichmentDatabase {
             assertEquals("Enrichment Engine not loaded", er.getDescription());
         } finally {
             _folder.delete();
-            Configuration.getInstance().setEnrichmentEngine(null);
+            Configuration.getInstance().setCommunityDetectionEngine(null);
 
         }
     }
@@ -616,7 +547,7 @@ public class TestEnrichmentDatabase {
             fw.flush();
             fw.close();
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new Enrichment());
+            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
             MockHttpRequest request = MockHttpRequest.delete(Configuration.V_ONE_PATH +
                                                           "/12345");
@@ -625,17 +556,17 @@ public class TestEnrichmentDatabase {
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
             
             // create mock enrichment engine that returns null
-            EnrichmentEngine mockEngine = createMock(EnrichmentEngine.class);
+            CommunityDetectionEngine mockEngine = createMock(CommunityDetectionEngine.class);
             mockEngine.delete("12345");
             replay(mockEngine);
-            Configuration.getInstance().setEnrichmentEngine(mockEngine);
+            Configuration.getInstance().setCommunityDetectionEngine(mockEngine);
             
             dispatcher.invoke(request, response);
             assertEquals(200, response.getStatus());
             verify(mockEngine);
         } finally {
             _folder.delete();
-            Configuration.getInstance().setEnrichmentEngine(null);
+            Configuration.getInstance().setCommunityDetectionEngine(null);
         }
     }
     
@@ -653,13 +584,13 @@ public class TestEnrichmentDatabase {
             fw.flush();
             fw.close();
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new Enrichment());
+            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
             MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/12345/overlaynetwork");
 
             MockHttpResponse response = new MockHttpResponse();
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
-            Configuration.getInstance().setEnrichmentEngine(null);
+            Configuration.getInstance().setCommunityDetectionEngine(null);
 
             dispatcher.invoke(request, response);
             assertEquals(500, response.getStatus());
@@ -670,86 +601,8 @@ public class TestEnrichmentDatabase {
             assertEquals("Enrichment Engine not loaded", er.getDescription());
         } finally {
             _folder.delete();
-            Configuration.getInstance().setEnrichmentEngine(null);
+            Configuration.getInstance().setCommunityDetectionEngine(null);
 
         }
     }
-    
-    @Test
-    public void testGetOverlayNetworkWhereIdDoesNotExist() throws Exception {
-
-        try {
-            File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new Enrichment());
-
-            MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/12345/overlaynetwork?databaseUUID=dbid&networkUUID=netid");
-
-            MockHttpResponse response = new MockHttpResponse();
-            Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
-            
-            // create mock enrichment engine that returns null
-            EnrichmentEngine mockEngine = createMock(EnrichmentEngine.class);
-            expect(mockEngine.getNetworkOverlayAsCX("12345", "dbid", "netid")).andReturn(null);
-            replay(mockEngine);
-            Configuration.getInstance().setEnrichmentEngine(mockEngine);
-            
-            dispatcher.invoke(request, response);
-            assertEquals(410, response.getStatus());
-            verify(mockEngine);
-        } finally {
-            _folder.delete();
-            Configuration.getInstance().setEnrichmentEngine(null);
-
-        }
-    }
-    
-    @Test
-    public void testGetOverlayNetworkWhereIdExists() throws Exception {
-
-        try {
-            File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new Enrichment());
-
-            MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/12345/overlaynetwork?databaseUUID=dbid&networkUUID=netid");
-
-            MockHttpResponse response = new MockHttpResponse();
-            Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
-            
-            // create mock enrichment engine that returns null
-            EnrichmentEngine mockEngine = createMock(EnrichmentEngine.class);
-            String jsonStr = "{\"a\": \"b\"}";
-            byte[] strAsByte = jsonStr.getBytes();
-            ByteArrayInputStream iStream = new ByteArrayInputStream(strAsByte);
-            expect(mockEngine.getNetworkOverlayAsCX("12345", "dbid", "netid")).andReturn(iStream);
-            replay(mockEngine);
-            Configuration.getInstance().setEnrichmentEngine(mockEngine);
-            
-            dispatcher.invoke(request, response);
-            assertEquals(200, response.getStatus());
-            assertEquals(jsonStr, response.getContentAsString());
-            verify(mockEngine);
-        } finally {
-            _folder.delete();
-            Configuration.getInstance().setEnrichmentEngine(null);
-        }
-    }
-    */
 }

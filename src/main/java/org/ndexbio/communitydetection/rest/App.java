@@ -128,11 +128,11 @@ public class App {
                 rootLog.setLevel(Level.toLevel(props.getProperty(App.RUNSERVER_LOGLEVEL, "INFO")));
 
                 String logDir = props.getProperty(App.RUNSERVER_LOGDIR, ".");
-                RolloverFileOutputStream os = new RolloverFileOutputStream(logDir + File.separator + "ndexenrich_yyyy_mm_dd.log", true);
+                RolloverFileOutputStream os = new RolloverFileOutputStream(logDir + File.separator + "communitydetection_yyyy_mm_dd.log", true);
 		
 		
                 final int port = Integer.valueOf(props.getProperty(App.RUNSERVER_PORT, "8081"));
-                System.out.println("\nSpinning up server for status invoke: http://localhost:" + Integer.toString(port) + "/enrichment/v1/status\n\n");
+                System.out.println("\nSpinning up server for status invoke: http://localhost:" + Integer.toString(port) + "/communitydetection/v1/status\n\n");
                 System.out.flush();
                 
                 //We are creating a print stream based on our RolloverFileOutputStream
@@ -149,7 +149,7 @@ public class App {
                 HashMap<String, String> initMap = new HashMap<>();
                 initMap.put("resteasy.servlet.mapping.prefix",
                             Configuration.APPLICATION_PATH);
-                initMap.put("javax.ws.rs.Application", "org.ndexbio.enrichment.rest.EnrichmentApplication");
+                initMap.put("javax.ws.rs.Application", "org.ndexbio.communitydetection.rest.CommunityDetectionApplication");
                 final ServletHolder restEasyServlet = new ServletHolder(
                      new CommunityDetectionHttpServletDispatcher());
                 
