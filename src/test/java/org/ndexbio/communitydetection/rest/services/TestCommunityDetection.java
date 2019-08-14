@@ -26,7 +26,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.ndexbio.communitydetection.rest.engine.CommunityDetectionEngine;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequest;
-import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequestStatus;
+import org.ndexbio.communitydetection.rest.model.CommunityDetectionResultStatus;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionResult;
 import org.ndexbio.communitydetection.rest.model.ErrorResponse;
 import org.ndexbio.communitydetection.rest.model.Task;
@@ -49,7 +49,6 @@ public class TestCommunityDetection {
             
             FileWriter fw = new FileWriter(confFile);
             
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.flush();
             fw.close();
@@ -87,7 +86,6 @@ public class TestCommunityDetection {
             
             FileWriter fw = new FileWriter(confFile);
             
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.flush();
             fw.close();
@@ -133,7 +131,6 @@ public class TestCommunityDetection {
             
             FileWriter fw = new FileWriter(confFile);
             
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.flush();
             fw.close();
@@ -179,7 +176,6 @@ public class TestCommunityDetection {
             
             FileWriter fw = new FileWriter(confFile);
             
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.flush();
             fw.close();
@@ -227,7 +223,6 @@ public class TestCommunityDetection {
             
             FileWriter fw = new FileWriter(confFile);
             
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.write(Configuration.HOST_URL + " = http://foo.com\n");
             fw.flush();
@@ -277,7 +272,6 @@ public class TestCommunityDetection {
             
             FileWriter fw = new FileWriter(confFile);
             
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.flush();
             fw.close();
@@ -310,7 +304,6 @@ public class TestCommunityDetection {
             
             FileWriter fw = new FileWriter(confFile);
             
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.flush();
             fw.close();
@@ -347,7 +340,6 @@ public class TestCommunityDetection {
             
             FileWriter fw = new FileWriter(confFile);
             
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.flush();
             fw.close();
@@ -390,7 +382,6 @@ public class TestCommunityDetection {
             
             FileWriter fw = new FileWriter(confFile);
             
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.flush();
             fw.close();
@@ -426,7 +417,6 @@ public class TestCommunityDetection {
             
             FileWriter fw = new FileWriter(confFile);
             
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.flush();
             fw.close();
@@ -463,7 +453,6 @@ public class TestCommunityDetection {
             
             FileWriter fw = new FileWriter(confFile);
             
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.flush();
             fw.close();
@@ -478,7 +467,7 @@ public class TestCommunityDetection {
             
             // create mock enrichment engine that returns null
             CommunityDetectionEngine mockEngine = createMock(CommunityDetectionEngine.class);
-            CommunityDetectionRequestStatus eqs = new CommunityDetectionRequestStatus();
+            CommunityDetectionResultStatus eqs = new CommunityDetectionResultStatus();
             eqs.setProgress(55);
             expect(mockEngine.getStatus("12345")).andReturn(eqs);
             replay(mockEngine);
@@ -487,8 +476,8 @@ public class TestCommunityDetection {
             dispatcher.invoke(request, response);
             assertEquals(200, response.getStatus());
             ObjectMapper mapper = new ObjectMapper();
-            CommunityDetectionRequestStatus res = mapper.readValue(response.getOutput(),
-                    CommunityDetectionRequestStatus.class);
+            CommunityDetectionResultStatus res = mapper.readValue(response.getOutput(),
+                    CommunityDetectionResultStatus.class);
             assertEquals(55, res.getProgress());
             verify(mockEngine);
         } finally {
@@ -506,7 +495,6 @@ public class TestCommunityDetection {
             
             FileWriter fw = new FileWriter(confFile);
             
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.flush();
             fw.close();
@@ -542,7 +530,6 @@ public class TestCommunityDetection {
             
             FileWriter fw = new FileWriter(confFile);
             
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.flush();
             fw.close();
@@ -579,7 +566,6 @@ public class TestCommunityDetection {
             
             FileWriter fw = new FileWriter(confFile);
             
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.flush();
             fw.close();

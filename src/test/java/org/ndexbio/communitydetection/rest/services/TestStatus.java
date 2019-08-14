@@ -47,7 +47,6 @@ public class TestStatus {
             
             FileWriter fw = new FileWriter(confFile);
             
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.flush();
             fw.close();
@@ -82,7 +81,6 @@ public class TestStatus {
             
             FileWriter fw = new FileWriter(confFile);
             
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.flush();
             fw.close();
@@ -124,7 +122,6 @@ public class TestStatus {
             
             FileWriter fw = new FileWriter(confFile);
             
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.flush();
             fw.close();
@@ -166,7 +163,6 @@ public class TestStatus {
             
             FileWriter fw = new FileWriter(confFile);
             
-            fw.write(Configuration.DATABASE_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.flush();
             fw.close();

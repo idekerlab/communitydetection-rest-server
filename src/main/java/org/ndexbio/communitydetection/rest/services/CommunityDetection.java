@@ -24,7 +24,7 @@ import javax.ws.rs.core.Response;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequest;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionResult;
 import org.ndexbio.communitydetection.rest.engine.CommunityDetectionEngine;
-import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequestStatus;
+import org.ndexbio.communitydetection.rest.model.CommunityDetectionResultStatus;
 import org.ndexbio.communitydetection.rest.model.ErrorResponse;
 import org.ndexbio.communitydetection.rest.model.Task;
 import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionException;
@@ -62,7 +62,7 @@ public class CommunityDetection {
                                 content = @Content(mediaType = MediaType.APPLICATION_JSON,
                                 schema = @Schema(implementation = ErrorResponse.class)))
                })
-    public Response requestEnrichment(@RequestBody(description="Query", required = true,
+    public Response request(@RequestBody(description="Query", required = true,
                                                    content = @Content(schema = @Schema(implementation = CommunityDetectionRequest.class))) final String query) {
         ObjectMapper omappy = new ObjectMapper();
 
@@ -70,12 +70,12 @@ public class CommunityDetection {
             // not sure why but I cannot get resteasy and jackson to worktogether to
             // automatically translate json to Query class so I'm doing it after the
             // fact
-            CommunityDetectionEngine enricher = Configuration.getInstance().getCommunityDetectionEngine();
-            if (enricher == null){
+            CommunityDetectionEngine engine = Configuration.getInstance().getCommunityDetectionEngine();
+            if (engine == null){
                 throw new NullPointerException("CommunityDetection Engine not loaded");
             }
             CommunityDetectionRequest pQuery = omappy.readValue(query, CommunityDetectionRequest.class);
-            String id = enricher.request(pQuery);
+            String id = engine.request(pQuery);
             if (id == null){
                 throw new CommunityDetectionException("No id returned from CommunityDetection engine");
             }
@@ -84,7 +84,7 @@ public class CommunityDetection {
             return Response.status(202).location(new URI(Configuration.getInstance().getHostURL() +
                                                          Configuration.V_ONE_PATH + "/" + id).normalize()).entity(omappy.writeValueAsString(t)).build();
         } catch(Exception ex){
-            ErrorResponse er = new ErrorResponse("Error requesting enrichment", ex);
+            ErrorResponse er = new ErrorResponse("Error requesting CommunityDetection", ex);
             return Response.serverError().type(MediaType.APPLICATION_JSON).entity(er.asJson()).build();
         }
     }
@@ -138,7 +138,7 @@ public class CommunityDetection {
                    @ApiResponse(responseCode = "200",
                            description = "Success",
                            content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                                schema = @Schema(implementation = CommunityDetectionRequestStatus.class))),
+                                schema = @Schema(implementation = CommunityDetectionResultStatus.class))),
                    @ApiResponse(responseCode = "410",
                            description = "Task not found"),
                    @ApiResponse(responseCode = "500", description = "Server Error",
@@ -153,7 +153,7 @@ public class CommunityDetection {
             if (engine == null){
                 throw new NullPointerException("CommunityDetection Engine not loaded");
             }
-            CommunityDetectionRequestStatus eqs = engine.getStatus(id);
+            CommunityDetectionResultStatus eqs = engine.getStatus(id);
             if (eqs ==  null){
                 return Response.status(410).build();
             }

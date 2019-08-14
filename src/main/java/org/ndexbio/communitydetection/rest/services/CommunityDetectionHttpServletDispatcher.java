@@ -26,28 +26,28 @@ public class CommunityDetectionHttpServletDispatcher extends HttpServletDispatch
 
     private static String _version = "";
     private static String _buildNumber = "";
-    private CommunityDetectionEngine _enrichmentEngine;
+    private CommunityDetectionEngine _communityDetectionEngine;
     private Thread _enrichmentEngineThread;
     
     
     public CommunityDetectionHttpServletDispatcher() throws CommunityDetectionException{
         super();
         _logger.info("In constructor");
-        createAndStartEnrichmentEngine();
+        createAndStartCommunityDetectionEngine();
 
     }
     
-    protected void createAndStartEnrichmentEngine() throws CommunityDetectionException {
+    protected void createAndStartCommunityDetectionEngine() throws CommunityDetectionException {
         
         try {
             BasicCommunityDetectionEngineFactory fac = new BasicCommunityDetectionEngineFactory(Configuration.getInstance());
             _logger.debug("Creating CommunityDetection Engine from factory");
-            _enrichmentEngine = fac.getCommunityDetectionEngine();
+            _communityDetectionEngine = fac.getCommunityDetectionEngine();
             _logger.debug("Starting CommunityDetection Engine thread");
-            _enrichmentEngineThread = new Thread(_enrichmentEngine);
+            _enrichmentEngineThread = new Thread(_communityDetectionEngine);
             _enrichmentEngineThread.start();
             _logger.debug("CommunityDetection Engine thread running id => " + Long.toString(_enrichmentEngineThread.getId()));
-            Configuration.getInstance().setCommunityDetectionEngine(_enrichmentEngine);
+            Configuration.getInstance().setCommunityDetectionEngine(_communityDetectionEngine);
         }
         catch(CommunityDetectionException ex){
             _logger.error("Unable to start enrichment engine", ex);
@@ -67,9 +67,9 @@ public class CommunityDetectionHttpServletDispatcher extends HttpServletDispatch
     public void destroy() {
         super.destroy();
         _logger.info("In destroy()");
-        if (_enrichmentEngine != null){
-            _enrichmentEngine.shutdown();
-            _logger.info("Waiting for enrichment engine to shutdown");
+        if (_communityDetectionEngine != null){
+            _communityDetectionEngine.shutdown();
+            _logger.info("Waiting for CommunityDetection engine to shutdown");
             try {
                 if (_enrichmentEngineThread != null){
                     _enrichmentEngineThread.join(10000);
@@ -98,9 +98,9 @@ public class CommunityDetectionHttpServletDispatcher extends HttpServletDispatch
            
             Attributes aa = manifest.getMainAttributes();	
 
-            String ver = aa.getValue("NDExEnrichment-Version");
-            String bui = aa.getValue("NDExEnrichment-Build"); 
-            _logger.info("NDEx-Version: " + ver + ",Build:" + bui);
+            String ver = aa.getValue("CommunityDetection-Version");
+            String bui = aa.getValue("CommunityDetection-Build"); 
+            _logger.info("CommunityDetection: " + ver + ",Build:" + bui);
             if (_buildNumber != null && _version != null){
                 _buildNumber= bui.substring(0, 5);
                 _version = ver;

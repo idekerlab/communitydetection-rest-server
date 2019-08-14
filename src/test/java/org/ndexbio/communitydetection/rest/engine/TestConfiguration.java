@@ -52,7 +52,6 @@ public class TestConfiguration {
             fos.close();
             Configuration.setAlternateConfigurationFile(configFile.getAbsolutePath());
             Configuration config = Configuration.reloadConfiguration();
-            assertEquals("/tmp", config.getDatabaseDirectory());
             assertEquals("/tmp", config.getTaskDirectory());
             assertNull(config.getCommunityDetectionEngine());
         } finally {
@@ -67,7 +66,6 @@ public class TestConfiguration {
             File configFile = new File(tempDir.getAbsolutePath() + File.separator + "conf");
             File taskDir = new File(tempDir.getAbsolutePath() + File.separator + "tasks");
             Properties props = new Properties();
-            props.setProperty(Configuration.DATABASE_DIR, tempDir.getAbsolutePath());
             props.setProperty(Configuration.TASK_DIR, taskDir.getAbsolutePath());
             FileOutputStream fos = new FileOutputStream(configFile);
             props.store(fos, "hello");
@@ -75,7 +73,6 @@ public class TestConfiguration {
             fos.close();
             Configuration.setAlternateConfigurationFile(configFile.getAbsolutePath());
             Configuration config = Configuration.reloadConfiguration();
-            assertEquals(tempDir.getAbsolutePath(), config.getDatabaseDirectory());
             assertEquals(taskDir.getAbsolutePath(), config.getTaskDirectory());
             assertNull(config.getCommunityDetectionEngine());
         } finally {

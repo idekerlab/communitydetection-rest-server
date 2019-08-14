@@ -1,10 +1,12 @@
 package org.ndexbio.communitydetection.rest.services;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.Properties;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -26,17 +28,22 @@ public class Configuration {
     public static final String V_ONE_PATH = "/v1";
     public static final String COMMUNITY_DETECTION_CONFIG = "COMMUNITY_DETECTION_CONFIG";
     
-    public static final String DATABASE_DIR = "communitydetection.database.dir";
     public static final String TASK_DIR = "communitydetection.task.dir";
     public static final String HOST_URL = "communitydetection.host.url";    
+    public static final String NUM_WORKERS = "communitydetection.number.workers";
+    public static final String DOCKER_CMD = "communitydetection.docker.cmd";
+    public static final String ALGORITHM_MAP = "communitydetection.algorithm.map";
     
     private static Configuration INSTANCE;
     private static final Logger _logger = LoggerFactory.getLogger(Configuration.class);
     private static String _alternateConfigurationFile;
     private static CommunityDetectionEngine _communityEngine;
-    private static String _databaseDir;
     private static String _taskDir;
     private static String _hostURL;
+    private static String _dockerCmd;
+    private static int _numWorkers;
+    private static HashMap<String, String> _algoMap;
+    
     /**
      * Constructor that attempts to get configuration from properties file
      * specified via configPath
@@ -59,14 +66,37 @@ public class Configuration {
                      " : " + io);
         }
         
-        _databaseDir = props.getProperty(Configuration.DATABASE_DIR, "/tmp");
         _taskDir = props.getProperty(Configuration.TASK_DIR, "/tmp");
+        _numWorkers = Integer.parseInt(props.getProperty(Configuration.NUM_WORKERS, "1"));
         _hostURL = props.getProperty(Configuration.HOST_URL, "");
+        _dockerCmd = props.getProperty(Configuration.DOCKER_CMD, "docker");
+        _algoMap = parseAlgorithmMap(props.getProperty(Configuration.ALGORITHM_MAP, "{\"infomap\": \"coleslawndex/infomap\"}"));
         if (_hostURL.trim().isEmpty()){
             _hostURL = "";
         } else if (!_hostURL.endsWith("/")){
             _hostURL =_hostURL + "/";
         }
+    }
+    
+    protected HashMap<String, String> parseAlgorithmMap(final String algoMapString){
+        ObjectMapper mapper = new ObjectMapper();
+        HashMap<String, String> hMap = new HashMap<String, String>();
+        try {
+            JsonNode actualObj = mapper.readTree(algoMapString);
+            Iterator<Entry<String, JsonNode>> fields = actualObj.fields();
+            _logger.info("Algorithm to docker image mapping: ");
+            while(fields.hasNext()){
+                Entry<String, JsonNode> jsonField = fields.next();
+                _logger.info(jsonField.getKey() + " => " + jsonField.getValue().asText());
+                hMap.put(jsonField.getKey(), jsonField.getValue().asText());
+            }
+            return hMap;
+        }
+        catch(IOException io){
+              _logger.error("Error parsing json: " + algoMapString + " : " + io.getMessage());
+        }
+        
+        return null;
     }
         
     protected void setCommunityDetectionEngine(CommunityDetectionEngine ee){
@@ -86,19 +116,23 @@ public class Configuration {
     }
     
     /**
-     * Gets directory where enrichment database is stored on the file system
-     * @return 
-     */
-    public String getDatabaseDirectory(){
-        return _databaseDir;
-    }
-    
-    /**
      * Gets directory where enrichment task results should be stored
      * @return 
      */
     public String getTaskDirectory(){
         return _taskDir;
+    }
+    
+    public int getNumberWorkers(){
+        return _numWorkers;
+    }
+    
+    public String getDockerCommand(){
+        return _dockerCmd;
+    }
+    
+    public HashMap<String, String> getAlgorithmToDockerMap(){
+        return _algoMap;
     }
     
     /**

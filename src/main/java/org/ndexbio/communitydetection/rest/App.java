@@ -64,14 +64,10 @@ public class App {
     
     public static final String MODE = "mode";
     public static final String CONF = "conf";    
-    public static final String CREATEDB_MODE = "createdb";
     public static final String EXAMPLE_CONF_MODE = "exampleconf";
-    public static final String EXAMPLE_DBRES_MODE = "exampledbresults";
     public static final String RUNSERVER_MODE = "runserver";
     
-    public static final String SUPPORTED_MODES = CREATEDB_MODE +
-                                                    ", " + EXAMPLE_CONF_MODE +
-                                                    ", " + EXAMPLE_DBRES_MODE +
+    public static final String SUPPORTED_MODES = EXAMPLE_CONF_MODE +
                                                     ", " + RUNSERVER_MODE;
     
     public static void main(String[] args){
@@ -114,12 +110,7 @@ public class App {
                 System.out.flush();
                 return;
             }
-            if (mode.equals(EXAMPLE_DBRES_MODE)){
-                System.out.println("TODO");
-                System.out.flush();
-                return;
-            }
-            
+      
             if (mode.equals(RUNSERVER_MODE)){
                 Configuration.setAlternateConfigurationFile(optionSet.valueOf(CONF).toString());
                 Properties props = getPropertiesFromConf(optionSet.valueOf(CONF).toString());
@@ -191,13 +182,19 @@ public class App {
      */
     public static String generateExampleConfiguration() throws Exception {
         StringBuilder sb = new StringBuilder();
-        sb.append("# Example configuration file for Enrichment service\n\n");
+        sb.append("# Example configuration file for Community Detection service\n\n");
         
-        sb.append("# Sets Enrichment database directory\n");
-        sb.append(Configuration.DATABASE_DIR + " = /tmp/db\n\n");
-        
-        sb.append("# Sets Enrichment task directory where results from queries are stored\n");
+        sb.append("# Sets Community Detection task directory where results from queries are stored\n");
         sb.append(Configuration.TASK_DIR + " = /tmp/tasks\n\n");
+        
+        sb.append("# Sets number of workers to use to run tasks\n");
+        sb.append(Configuration.NUM_WORKERS + " = 1\n\n");
+        
+        sb.append("# Docker command to run\n");
+        sb.append(Configuration.DOCKER_CMD + " = docker\n\n");
+        
+        sb.append("# Json fragment that is a mapping of algorithm names to docker images\n");
+        sb.append(Configuration.ALGORITHM_MAP + " = {\"infomap\": \"coleslawndex/infomap\"}\n\n");
         
         sb.append("# Sets HOST URL prefix (value is prefixed to Location header when query is invoked. Can be commented out)\n");
         sb.append("# " + Configuration.HOST_URL + " = http://ndexbio.org\n");
@@ -208,7 +205,7 @@ public class App {
         sb.append("# Sets port Jetty web service will be run under\n");
         sb.append(App.RUNSERVER_PORT + " = 8081\n\n");
         
-        sb.append("# sets Jetty Context Path for Enrichment\n");
+        sb.append("# sets Jetty Context Path for Community Detection\n");
         sb.append(App.RUNSERVER_CONTEXTPATH + " = /\n\n");
         
         sb.append("# Valid log levels DEBUG INFO WARN ERROR ALL\n");

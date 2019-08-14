@@ -5,17 +5,19 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import org.apache.commons.io.FileUtils;
+import org.ndexbio.communitydetection.rest.engine.util.DockerCommunityDetectionRunner;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequest;
-import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequestStatus;
+import org.ndexbio.communitydetection.rest.model.CommunityDetectionResultStatus;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionResult;
 import org.ndexbio.communitydetection.rest.model.ServerStatus;
 import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionException;
@@ -31,42 +33,38 @@ import org.slf4j.LoggerFactory;
  */
 public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
 
-    public static final String CDR_JSON_FILE = "communitydetectionresult.json";
+    public static final String CDREQEUST_JSON_FILE = "cdrequest.json";
+    
+    public static final String CDRESULT_JSON_FILE = "cdresult.json";
     
     static Logger _logger = LoggerFactory.getLogger(CommunityDetectionEngineImpl.class);
 
     private String _taskDir;
     private boolean _shutdown;
     private ExecutorService _executorService;
-    
-    private List<Future> _futureTaskList = Collections
-            .synchronizedList(new LinkedList<Future>());
-    
-    private ConcurrentLinkedQueue<Callable> _tasksToProcess
-            = new ConcurrentLinkedQueue<>();
-    
+    private  List<Future> _futureTaskList;
+    private HashMap<String, String> _algoToDockerMap;
+    private String _dockerCmd;
+        
     /**
-     * This should be a map of <query UUID> => CommunityDetectionRequest object
+     * This should be a map of <query UUID> => EnrichmentQueryResults object
      */
-    private ConcurrentHashMap<String, CommunityDetectionRequest> _queryTasks;
-    
-    private ConcurrentLinkedQueue<String> _queryTaskIds;
-    
-    /**
-     * This should be a map of <query UUID> => CommunityDetectionResult object
-     */
-    private ConcurrentHashMap<String, CommunityDetectionResult> _queryResults;
-    
+    private ConcurrentHashMap<String, CommunityDetectionResult> _results;
+
     private long _threadSleep = 10;
     
     public CommunityDetectionEngineImpl(ExecutorService es,
-            final String taskDir){
+            final String taskDir,
+            final String dockerCmd,
+            final HashMap<String, String> algoToDockerMap){
         _executorService = es;
         _shutdown = false;
+        _futureTaskList = Collections
+            .synchronizedList(new LinkedList<Future>());
         _taskDir = taskDir;
-        _queryTasks = new ConcurrentHashMap<>();
-        _queryResults = new ConcurrentHashMap<>();
-        _queryTaskIds = new ConcurrentLinkedQueue<>();
+        _dockerCmd = dockerCmd;
+        _algoToDockerMap = algoToDockerMap;
+        _results = new ConcurrentHashMap<>();
     }
     
     /**
@@ -92,15 +90,30 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
     @Override
     public void run() {
         while(_shutdown == false){
-            String id = _queryTaskIds.poll();
-            if (id == null){
-                threadSleep();
-                continue;
+            Future f;
+            Iterator<Future> itr = _futureTaskList.iterator();
+            while(itr.hasNext()){
+                f = itr.next();
+                if (f.isCancelled() || f.isDone()){
+                    if (f.isDone()){
+                       CommunityDetectionResult cdr;
+                        try {
+                            cdr = (CommunityDetectionResult) f.get();
+                        } catch (InterruptedException ex) {
+                            _logger.error("Got interrupted exception", ex);
+                            continue;
+                        } catch (ExecutionException ex) {
+                            _logger.error("Got execution exception", ex);
+                            continue;
+                        }
+                        if (cdr != null){
+                            _results.put(cdr.getId(), cdr);
+                        }
+                    }
+                    itr.remove();
+                }
             }
-            //_futureTaskList.add(_executorService.submit(_cdFactory.getRunner(id)));
-            _queryTasks.remove(id);
-            
-            //need to clean up _futureTaskList?
+            threadSleep();
         }
         _logger.debug("Shutdown was invoked");
     }
@@ -109,7 +122,7 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
     public void shutdown() {
         _shutdown = true;
     }
-
+    
     @Override
     public String request(CommunityDetectionRequest request) throws CommunityDetectionException {
         if (request == null){ 
@@ -122,30 +135,50 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
             throw new CommunityDetectionException("Edge list is null");
         }
         String id = UUID.randomUUID().toString();
-        _queryTasks.put(id, request);
-        _queryTaskIds.add(id);
+
         CommunityDetectionResult cdr = new CommunityDetectionResult(System.currentTimeMillis());
         cdr.setStatus(CommunityDetectionResult.SUBMITTED_STATUS);
-        this._queryResults.merge(id, cdr, (oldval, newval) -> newval.updateStartTime(oldval));
-        return id;
+        cdr.setId(id);
+        _results.put(id, cdr);
+        
+        if (_algoToDockerMap.containsKey(request.getAlgorithm()) == false){
+            throw new CommunityDetectionException(request.getAlgorithm() + " is not a valid algorithm");
+        }
+        
+        String dockerImage = _algoToDockerMap.get(request.getAlgorithm());
+        try {
+            DockerCommunityDetectionRunner task = new DockerCommunityDetectionRunner(id, request, cdr.getStartTime(),
+            _taskDir, _dockerCmd, dockerImage);
+            _futureTaskList.add(_executorService.submit(task));
+            return id;
+        } catch(Exception ex){
+            throw new CommunityDetectionException(ex.getMessage());
+        }
     }
 
     @Override
     public CommunityDetectionResult getResult(String id) throws CommunityDetectionException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (_results.containsKey(id) == false){
+            throw new CommunityDetectionException("No task with " + id + " found");
+        }
+        return (CommunityDetectionResult)_results.get(id);
     }
 
     @Override
-    public CommunityDetectionRequestStatus getStatus(String id) throws CommunityDetectionException {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public CommunityDetectionResultStatus getStatus(String id) throws CommunityDetectionException {
+        if (_results.containsKey(id) == false){
+            throw new CommunityDetectionException("No task with " + id + " found");
+        }
+        return (CommunityDetectionResultStatus)_results.get(id);
     }
 
     @Override
     public void delete(String id) throws CommunityDetectionException {
         _logger.debug("Deleting task " + id);
-        if (_queryResults.containsKey(id) == true){
-            _queryResults.remove(id);
+        if (_results.containsKey(id) == false){
+            return;
         }
+        _results.remove(id);
         File thisTaskDir = new File(this._taskDir + File.separator + id);
         if (thisTaskDir.exists() == false){
             return;

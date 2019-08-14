@@ -175,7 +175,7 @@
         </dependency>
     </dependencies>
     <scm>
-	  <connection>scm:git:https://github.com/ndexbio/ndex-enrichment-rest.git</connection>
+	  <connection>scm:git:https://github.com/coleslaw481/communitydetection-rest-server.git</connection>
     </scm>
     <build>
         <pluginManagement>
@@ -251,7 +251,7 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <version>2.3</version>
                 <configuration>
-                    <warName>ndex-enrichment-rest</warName>
+                    <warName>communitydetection-rest</warName>
                     <failOnMissingWebXml>true</failOnMissingWebXml>
                     <shortRevisionLength>5</shortRevisionLength>
                     <archiveClasses>true</archiveClasses>
@@ -260,8 +260,8 @@
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                         <manifestEntries>
-                            <NDExEnrichment-Version>${project.version}</NDExEnrichment-Version>
-                            <NDExEnrichment-Build>${buildNumber}</NDExEnrichment-Build>
+                            <CommunityDetection-Version>${project.version}</CommunityDetection-Version>
+                            <CommunityDetection-Build>${buildNumber}</CommunityDetection-Build>
                         </manifestEntries>
                     </archive>
                 </configuration>
@@ -296,11 +296,11 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.ndexbio.enrichment.rest.App</mainClass>
+                            <mainClass>org.ndexbio.communitydetection.rest.App</mainClass>
                         </manifest>
                         <manifestEntries>
-                            <NDExEnrichment-Version>${project.version}</NDExEnrichment-Version>
-                            <NDExEnrichment-Build>${buildNumber}</NDExEnrichment-Build>
+                            <CommunityDetection-Version>${project.version}</CommunityDetection-Version>
+                            <CommunityDetection-Build>${buildNumber}</CommunityDetection-Build>
                         </manifestEntries>
                     </archive>
                     <descriptorRefs>

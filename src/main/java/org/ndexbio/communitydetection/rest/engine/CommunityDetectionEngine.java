@@ -1,7 +1,7 @@
 package org.ndexbio.communitydetection.rest.engine;
 
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequest;
-import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequestStatus;
+import org.ndexbio.communitydetection.rest.model.CommunityDetectionResultStatus;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionResult;
 import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionException;
 import org.ndexbio.communitydetection.rest.model.ServerStatus;
@@ -35,7 +35,7 @@ public interface CommunityDetectionEngine extends Runnable {
      * @return
      * @throws CommunityDetectionException if there is an error
      */
-    public CommunityDetectionRequestStatus getStatus(final String id) throws CommunityDetectionException;
+    public CommunityDetectionResultStatus getStatus(final String id) throws CommunityDetectionException;
     
     /**
      * Deletes query
