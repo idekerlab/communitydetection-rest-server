@@ -6,13 +6,14 @@
 
 [make]: https://www.gnu.org/software/make
 
-NDEx Enrichment REST Service
-============================
+Community Detection REST Service
+==================================
 
-[![Build Status](https://travis-ci.org/ndexbio/ndex-enrichment-rest.svg?branch=master)](https://travis-ci.org/ndexbio/ndex-enrichment-rest) 
-[![Coverage Status](https://coveralls.io/repos/github/ndexbio/ndex-enrichment-rest/badge.svg)](https://coveralls.io/github/ndexbio/ndex-enrichment-rest)
+[![Build Status](https://travis-ci.org/coleslaw481/communitydetection_rest_server.svg?branch=master)](https://travis-ci.org/coleslaw481/communitydetection_rest_server) 
+[![Coverage Status](https://coveralls.io/repos/github/coleslaw481/communitydetection_rest_server/badge.svg)](https://coveralls.io/github/coleslaw481/communitydetection_rest_server)
 
-Provides enrichment REST service using select networks from NDEx as a backend.
+Provides REST service for several CommunityDetection algorithms.
+
 This service runs using an embedded [Jetty][jetty] server and is invoked
 from the command line. 
 
@@ -27,146 +28,88 @@ Requirements
 
 Special software to install (cause we haven't put these into maven central)
 
-* [ndex-enrichment-rest-model](https://github.com/ndexbio/ndex-enrichment-rest-model) built and installed via `mvn install`
-* [ndex-object-model](https://github.com/ndexbio/ndex-object-model) built and installed via `mvn install`
-* [ndex-java-client](https://github.com/ndexbio/ndex-java-client) built and installed via `mvn install`
+* [ndex-enrichment-rest-model](https://github.com/coleslaw481/communitydetection-rest-model) built and installed via `mvn install`
 
 
-Building NDEx Enrichment REST Service
-=====================================
 
-Commands build NDEx Enrichment REST Service assuming machine has [Git][git] command line tools 
+Building Community Detection REST Service
+=========================================
+
+Commands build Community Detection REST Service assuming machine has [Git][git] command line tools 
 installed and above Java modules have been installed.
 
 ```Bash
 # In lieu of git one can just download repo and unzip it
-git clone https://github.com/ndexbio/ndex-enrichment-rest.git
+git clone https://github.com/coleslaw481/communitydetection_rest_server.git
 
-cd ndex-enrichment-rest
+cd communitydetection_rest_server
 mvn clean test install
 ```
 
 The above command will create a jar file under **target/** named  
-**ndex-enrichment-rest-\<VERSION\>-jar-with-dependencies.jar** that
+**communitydetection-rest-\<VERSION\>-jar-with-dependencies.jar** that
 is a command line application
 
 
-Running Enrichment REST Service
-===============================
+Running Community Detection REST Service
+===========================================
 
 The following steps cover how to create the Enrichment database.
-In the steps below **enrichment.jar** refers to the jar
-created previously named **ndex-enrichment-rest-\<VERSION\>-jar-with-dependencies.jar**
+In the steps below **communitydetection.jar** refers to the jar
+created previously named **communitydetection-rest-\<VERSION\>-jar-with-dependencies.jar**
 
 ### Step 1 Create directories and configuration file
 
 ```bash
 # create directory
-mkdir -p enrichdb/logs enrichdb/db enrichdb/tasks
-cd enrichdb
+mkdir -p communitydetection/logs communitydetection/tasks
+cd communitydetection
 
 # Generate template configuration file
-java -jar enrichment.jar --mode exampleconf > enrichment.conf
+java -jar communitydetection.jar --mode exampleconf > communitydetection.conf
 ```
 
-The `enrichment.conf` file will look like the following:
+The `communitydetection.conf` file will look like the following:
 
 ```bash
-# Example configuration file for Enrichment service
+# Example configuration file for Community Detection service
 
-# Sets Enrichment database directory
-enrichment.database.dir = /tmp/db
+# Sets Community Detection task directory where results from queries are stored
+communitydetection.task.dir = /tmp/tasks
 
-# Sets Enrichment task directory where results from queries are stored
-enrichment.task.dir = /tmp/tasks
+# Sets number of workers to use to run tasks
+communitydetection.number.workers = 1
 
+# Docker command to run
+communitydetection.docker.cmd = docker
+
+# Json fragment that is a mapping of algorithm names to docker images
+communitydetection.algorithm.map = {"louvain": "coleslawndex/testlouvain"}
+
+# Sets HOST URL prefix (value is prefixed to Location header when query is invoked. Can be commented out)
+# communitydetection.host.url = http://ndexbio.org
 # Sets directory where log files will be written for Jetty web server
 runserver.log.dir = /tmp/logs
 
 # Sets port Jetty web service will be run under
 runserver.port = 8081
 
-# sets Jetty Context Path for Enrichment
+# sets Jetty Context Path for Community Detection
 runserver.contextpath = /
 
+# Valid log levels DEBUG INFO WARN ERROR ALL
+runserver.log.level = INFO
+
 ```
 
-Replace **/tmp** paths with full path location to **enrichdb** directory 
+Replace **/tmp** paths with full path location to **communitydetection** directory 
 created earlier.
 
-### Step 2 Create databaseresults.json file
 
-This file (which resides under **enrichment.task.dir**) contains
-information about networks on NDEx to use to generate the Enrichment
-database.
-
-Run the following to create an example **databaseresults.json** file:
+### Step 2 Run the service
 
 ```bash
-java -jar enrichment.jar --mode exampledbresults > db/databaseresults.json
-
-```
-
-The **databaseresults.json** file will look like this:
-
-```bash
-{
-  "geneMapList" : null,
-  "databaseUniqueGeneCount" : null,
-  "universeUniqueGeneCount" : 0,
-  "databaseConnectionMap" : {
-    "89a90a24-2fa8-4a57-ae4b-7c30a180e8e6" : {
-      "password" : "somepassword",
-      "user" : "bob",
-      "server" : "dev.ndexbio.org",
-      "networkSetId" : "d718366d-34e0-48cd-81bf-211a8b9a3fde"
-    },
-    "e508cf31-79af-463e-b8b6-ff34c87e1734" : {
-      "password" : "somepassword",
-      "user" : "bob",
-      "server" : "dev.ndexbio.org",
-      "networkSetId" : "e2ce01a3-5ce0-4d9e-be06-e20dad286d76"
-    }
-  },
-  "results" : [ {
-    "name" : "signor",
-    "description" : "This is a description of a signor database",
-    "numberOfNetworks" : "50",
-    "uuid" : "89a90a24-2fa8-4a57-ae4b-7c30a180e8e6"
-  }, {
-    "name" : "ncipid",
-    "description" : "This is a description of a ncipid database",
-    "numberOfNetworks" : "200",
-    "uuid" : "e508cf31-79af-463e-b8b6-ff34c87e1734"
-  } ]
-}
-```
-
-The **databaseConnectionMap** section is internal and contains NDEx connection information
-that needs to be updated.The networks for the database will be all networks
-under network set specified by value of **networkSetId**
-
-The **results** section is what will be returned to caller on service. During
-actual database creation the **numberOfNetworks** will be updated, but its
-up to you to set name and description and to pick a **uuid** that matches
-the values under **databaseConnectionMap**
-
- ### Step 3 create database
-
-To create the database run the following command:
- 
- ```bash
-java -jar enrichment.jar --mode createdb --conf enrichment.conf 
-```
-
-The above command will read the configuration and **databaseresults.json** 
-and query NDEx for networks downloading them to folders matching **uuid**
-values under the **enrichment.database.dir** directory.
-
-### Step 4 Run the service
-
-```bash
-jav -jar enrichment.jar --mode runserver --conf enrichment.conf
+java -jar communitydetection.jar --mode runserver --conf communitydetection.conf
 ```
 
 COPYRIGHT AND LICENSE
