@@ -55,7 +55,7 @@ public class TestCommunityDetection {
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
             dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
-            MockHttpRequest request = MockHttpRequest.post(Configuration.V_ONE_PATH);
+            MockHttpRequest request = MockHttpRequest.post(Configuration.APPLICATION_PATH + Configuration.V_ONE_PATH);
             CommunityDetectionRequest query = new CommunityDetectionRequest();
             ObjectMapper omappy = new ObjectMapper();
             request.contentType(MediaType.APPLICATION_JSON);
@@ -92,7 +92,7 @@ public class TestCommunityDetection {
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
             dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
-            MockHttpRequest request = MockHttpRequest.post(Configuration.V_ONE_PATH);
+            MockHttpRequest request = MockHttpRequest.post(Configuration.APPLICATION_PATH + Configuration.V_ONE_PATH);
             CommunityDetectionRequest query = new CommunityDetectionRequest();
             ObjectMapper omappy = new ObjectMapper();
             request.contentType(MediaType.APPLICATION_JSON);
@@ -137,7 +137,7 @@ public class TestCommunityDetection {
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
             dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
-            MockHttpRequest request = MockHttpRequest.post(Configuration.V_ONE_PATH);
+            MockHttpRequest request = MockHttpRequest.post(Configuration.APPLICATION_PATH + Configuration.V_ONE_PATH);
             CommunityDetectionRequest query = new CommunityDetectionRequest();
             ObjectMapper omappy = new ObjectMapper();
             request.contentType(MediaType.APPLICATION_JSON);
@@ -182,7 +182,7 @@ public class TestCommunityDetection {
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
             dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
-            MockHttpRequest request = MockHttpRequest.post(Configuration.V_ONE_PATH);
+            MockHttpRequest request = MockHttpRequest.post(Configuration.APPLICATION_PATH + Configuration.V_ONE_PATH);
             CommunityDetectionRequest query = new CommunityDetectionRequest();
             ObjectMapper omappy = new ObjectMapper();
             request.contentType(MediaType.APPLICATION_JSON);
@@ -203,7 +203,7 @@ public class TestCommunityDetection {
             assertEquals(202, response.getStatus());
             
             MultivaluedMap<String, Object> resmap = response.getOutputHeaders();
-            assertEquals(new URI("/v1/12345"), resmap.getFirst("Location"));
+            assertEquals(new URI(Configuration.APPLICATION_PATH + Configuration.V_ONE_PATH + "/12345"), resmap.getFirst("Location"));
             ObjectMapper mapper = new ObjectMapper();
             Task t = mapper.readValue(response.getOutput(),
                     Task.class);
@@ -230,7 +230,7 @@ public class TestCommunityDetection {
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
             dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
-            MockHttpRequest request = MockHttpRequest.post(Configuration.V_ONE_PATH);
+            MockHttpRequest request = MockHttpRequest.post(Configuration.APPLICATION_PATH + Configuration.V_ONE_PATH);
             CommunityDetectionRequest query = new CommunityDetectionRequest();
             ObjectMapper omappy = new ObjectMapper();
             request.contentType(MediaType.APPLICATION_JSON);
@@ -251,7 +251,7 @@ public class TestCommunityDetection {
             assertEquals(202, response.getStatus());
             
             MultivaluedMap<String, Object> resmap = response.getOutputHeaders();
-            assertEquals(new URI("http://foo.com/v1/12345"), resmap.getFirst("Location"));
+            assertEquals(new URI("http://foo.com" + Configuration.APPLICATION_PATH + Configuration.V_ONE_PATH + "/12345"), resmap.getFirst("Location"));
             ObjectMapper mapper = new ObjectMapper();
             Task t = mapper.readValue(response.getOutput(),
                     Task.class);
@@ -278,7 +278,7 @@ public class TestCommunityDetection {
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
             dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
-            MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/12345");
+            MockHttpRequest request = MockHttpRequest.get(Configuration.APPLICATION_PATH + Configuration.V_ONE_PATH + "/12345");
 
             MockHttpResponse response = new MockHttpResponse();
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
@@ -310,7 +310,7 @@ public class TestCommunityDetection {
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
             dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
-            MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/12345");
+            MockHttpRequest request = MockHttpRequest.get(Configuration.APPLICATION_PATH + Configuration.V_ONE_PATH + "/12345");
 
             MockHttpResponse response = new MockHttpResponse();
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
@@ -346,7 +346,7 @@ public class TestCommunityDetection {
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
             dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
-            MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH +
+            MockHttpRequest request = MockHttpRequest.get(Configuration.APPLICATION_PATH + Configuration.V_ONE_PATH +
                                                           "/12345?start=1&size=2");
 
             MockHttpResponse response = new MockHttpResponse();
@@ -388,7 +388,7 @@ public class TestCommunityDetection {
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
             dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
-            MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/12345/status");
+            MockHttpRequest request = MockHttpRequest.get(Configuration.APPLICATION_PATH + Configuration.V_ONE_PATH + "/12345/status");
 
             MockHttpResponse response = new MockHttpResponse();
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
@@ -423,7 +423,7 @@ public class TestCommunityDetection {
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
             dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
-            MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/12345/status");
+            MockHttpRequest request = MockHttpRequest.get(Configuration.APPLICATION_PATH + Configuration.V_ONE_PATH + "/12345/status");
 
             MockHttpResponse response = new MockHttpResponse();
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
@@ -459,7 +459,7 @@ public class TestCommunityDetection {
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
             dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
-            MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH +
+            MockHttpRequest request = MockHttpRequest.get(Configuration.APPLICATION_PATH + Configuration.V_ONE_PATH +
                                                           "/12345/status");
 
             MockHttpResponse response = new MockHttpResponse();
@@ -501,7 +501,7 @@ public class TestCommunityDetection {
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
             dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
-            MockHttpRequest request = MockHttpRequest.delete(Configuration.V_ONE_PATH + "/12345");
+            MockHttpRequest request = MockHttpRequest.delete(Configuration.APPLICATION_PATH + Configuration.V_ONE_PATH + "/12345");
 
             MockHttpResponse response = new MockHttpResponse();
             Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
@@ -536,7 +536,7 @@ public class TestCommunityDetection {
             Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
             dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
 
-            MockHttpRequest request = MockHttpRequest.delete(Configuration.V_ONE_PATH +
+            MockHttpRequest request = MockHttpRequest.delete(Configuration.APPLICATION_PATH + Configuration.V_ONE_PATH +
                                                           "/12345");
 
             MockHttpResponse response = new MockHttpResponse();

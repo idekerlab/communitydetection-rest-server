@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -33,7 +34,7 @@ import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionEx
  * CommunityDetection service
  * @author churas
  */
-@Path(Configuration.V_ONE_PATH)
+@Path(Configuration.APPLICATION_PATH)
 public class CommunityDetection {
     
     static Logger logger = LoggerFactory.getLogger(CommunityDetection.class);
@@ -43,7 +44,7 @@ public class CommunityDetection {
      * @return {@link javax.ws.rs.core.Response} 
      */
     @POST 
-    @Path("/")
+    @Path(Configuration.V_ONE_PATH + "/")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Submits Community Detection task",
@@ -82,7 +83,7 @@ public class CommunityDetection {
             Task t = new Task();
             t.setId(id);
             return Response.status(202).location(new URI(Configuration.getInstance().getHostURL() +
-                                                         Configuration.V_ONE_PATH + "/" + id).normalize()).entity(omappy.writeValueAsString(t)).build();
+                                                         Configuration.APPLICATION_PATH + Configuration.V_ONE_PATH + "/" + id).normalize()).entity(omappy.writeValueAsString(t)).build();
         } catch(Exception ex){
             ErrorResponse er = new ErrorResponse("Error requesting CommunityDetection", ex);
             return Response.serverError().type(MediaType.APPLICATION_JSON).entity(er.asJson()).build();
@@ -90,7 +91,7 @@ public class CommunityDetection {
     }
 
     @GET 
-    @Path("/{id}")
+    @Path(Configuration.V_ONE_PATH + "/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Gets result of Community Detection task",
                description="NOTE: For incomplete/failed jobs only Status, message, progress, and walltime will\n" +
@@ -130,7 +131,7 @@ public class CommunityDetection {
     }
 
     @GET 
-    @Path("/{id}/status")
+    @Path(Configuration.V_ONE_PATH + "/{id}/status")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Gets status of Community Detection task",
                description="This lets caller get status without getting the full result back",
@@ -166,7 +167,7 @@ public class CommunityDetection {
     }
 
     @DELETE 
-    @Path("/{id}")
+    @Path(Configuration.V_ONE_PATH + "/{id}")
     @Operation(summary = "Deletes task associated with {id} passed in",
                description="",
                responses = {

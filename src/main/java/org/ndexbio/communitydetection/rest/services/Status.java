@@ -25,7 +25,7 @@ import org.ndexbio.communitydetection.rest.engine.CommunityDetectionEngine;
  * Returns status of Server
  * @author churas
  */
-@Path(Configuration.V_ONE_PATH)
+@Path(Configuration.APPLICATION_PATH)
 public class Status {
     
     /**
@@ -41,7 +41,7 @@ public class Status {
      * @return {@link org.ndexbio.enrichment.rest.model.ServerStatus} as JSON
      */
     @GET // This annotation indicates GET request
-    @Path(STATUS_PATH)
+    @Path(Configuration.V_ONE_PATH + STATUS_PATH)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Gets server status",
                description="Gets version, load, and diskusage of server",

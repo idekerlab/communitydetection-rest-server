@@ -141,6 +141,8 @@ public class App {
                 initMap.put("resteasy.servlet.mapping.prefix",
                             Configuration.APPLICATION_PATH);
                 initMap.put("javax.ws.rs.Application", "org.ndexbio.communitydetection.rest.CommunityDetectionApplication");
+                initMap.put("openApi.configuration.prettyPrint", "true");
+                initMap.put("openApi.configuration.resourceClasses", "org.ndexbio.communitydetection.rest.services.CommunityDetection,org.ndexbio.communitydetection.rest.services.Status");
                 final ServletHolder restEasyServlet = new ServletHolder(
                      new CommunityDetectionHttpServletDispatcher());
                 
