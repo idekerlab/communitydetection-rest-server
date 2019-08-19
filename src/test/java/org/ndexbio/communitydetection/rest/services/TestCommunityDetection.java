@@ -71,8 +71,8 @@ public class TestCommunityDetection {
             ObjectMapper mapper = new ObjectMapper();
             ErrorResponse er = mapper.readValue(response.getOutput(),
                     ErrorResponse.class);
-            assertEquals("Error requesting enrichment", er.getMessage());
-            assertEquals("Enrichment Engine not loaded", er.getDescription());
+            assertEquals("Error requesting CommunityDetection", er.getMessage());
+            assertEquals("CommunityDetection Engine not loaded", er.getDescription());
         } finally {
             _folder.delete();
         }
@@ -114,7 +114,7 @@ public class TestCommunityDetection {
             ObjectMapper mapper = new ObjectMapper();
             ErrorResponse er = mapper.readValue(response.getOutput(),
                     ErrorResponse.class);
-            assertEquals("Error requesting enrichment", er.getMessage());
+            assertEquals("Error requesting CommunityDetection", er.getMessage());
             assertEquals("some error", er.getDescription());
             verify(mockEngine);
 
@@ -159,8 +159,8 @@ public class TestCommunityDetection {
             ObjectMapper mapper = new ObjectMapper();
             ErrorResponse er = mapper.readValue(response.getOutput(),
                     ErrorResponse.class);
-            assertEquals("Error requesting enrichment", er.getMessage());
-            assertEquals("No id returned from enrichment engine", er.getDescription());
+            assertEquals("Error requesting CommunityDetection", er.getMessage());
+            assertEquals("No id returned from CommunityDetection engine", er.getDescription());
             verify(mockEngine);
 
         } finally {
@@ -289,7 +289,7 @@ public class TestCommunityDetection {
             ErrorResponse er = mapper.readValue(response.getOutput(),
                     ErrorResponse.class);
             assertEquals("Error getting results for id: 12345", er.getMessage());
-            assertEquals("Enrichment Engine not loaded", er.getDescription());
+            assertEquals("CommunityDetection Engine not loaded", er.getDescription());
         } finally {
             _folder.delete();
         }
@@ -400,7 +400,7 @@ public class TestCommunityDetection {
             ErrorResponse er = mapper.readValue(response.getOutput(),
                     ErrorResponse.class);
             assertEquals("Error getting results for id: 12345", er.getMessage());
-            assertEquals("Enrichment Engine not loaded", er.getDescription());
+            assertEquals("CommunityDetection Engine not loaded", er.getDescription());
         } finally {
             _folder.delete();
             Configuration.getInstance().setCommunityDetectionEngine(null);
@@ -513,7 +513,7 @@ public class TestCommunityDetection {
             ErrorResponse er = mapper.readValue(response.getOutput(),
                     ErrorResponse.class);
             assertEquals("Error deleting: 12345", er.getMessage());
-            assertEquals("Enrichment Engine not loaded", er.getDescription());
+            assertEquals("CommunityDetection Engine not loaded", er.getDescription());
         } finally {
             _folder.delete();
             Configuration.getInstance().setCommunityDetectionEngine(null);
@@ -554,41 +554,6 @@ public class TestCommunityDetection {
         } finally {
             _folder.delete();
             Configuration.getInstance().setCommunityDetectionEngine(null);
-        }
-    }
-    
-    @Test
-    public void testGetOverlayNetworkWhereEnrichmentEngineNotLoaded() throws Exception {
-
-        try {
-            File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
-
-            MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/12345/overlaynetwork");
-
-            MockHttpResponse response = new MockHttpResponse();
-            Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
-            Configuration.getInstance().setCommunityDetectionEngine(null);
-
-            dispatcher.invoke(request, response);
-            assertEquals(500, response.getStatus());
-            ObjectMapper mapper = new ObjectMapper();
-            ErrorResponse er = mapper.readValue(response.getOutput(),
-                    ErrorResponse.class);
-            assertEquals("Error getting overlay network for id: 12345", er.getMessage());
-            assertEquals("Enrichment Engine not loaded", er.getDescription());
-        } finally {
-            _folder.delete();
-            Configuration.getInstance().setCommunityDetectionEngine(null);
-
         }
     }
 }

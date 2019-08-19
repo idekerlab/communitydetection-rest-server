@@ -39,7 +39,7 @@ public class TestStatus {
     }
     
     @Test
-    public void testGetEnrichmentEngineNull() throws Exception {
+    public void testGetCommunityDetectionEngineNull() throws Exception {
 
         try {
             File tempDir = _folder.newFolder();
@@ -65,7 +65,7 @@ public class TestStatus {
             ErrorResponse er = mapper.readValue(response.getOutput(),
                     ErrorResponse.class);
             assertEquals("Error retreiving server status", er.getMessage());
-            assertEquals("Enrichment Engine not loaded", er.getDescription());
+            assertEquals("CommunityDetection Engine not loaded", er.getDescription());
             
         } finally {
             _folder.delete();

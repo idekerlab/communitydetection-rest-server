@@ -54,6 +54,11 @@ public class TestConfiguration {
             Configuration config = Configuration.reloadConfiguration();
             assertEquals("/tmp", config.getTaskDirectory());
             assertNull(config.getCommunityDetectionEngine());
+            assertEquals(1, config.getNumberWorkers());
+            assertEquals("docker", config.getDockerCommand());
+            
+            assertEquals(1, config.getAlgorithmToDockerMap().size());
+            assertEquals("coleslawndex/infomap", config.getAlgorithmToDockerMap().get("infomap"));
         } finally {
             _folder.delete();
         }
