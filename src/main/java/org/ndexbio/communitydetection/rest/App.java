@@ -41,7 +41,7 @@ public class App {
     static Logger _logger = LoggerFactory.getLogger(App.class);
 
     public static final String DESCRIPTION = "\nNDEx Community Detection REST service\n\n"
-            + "For usage information visit:  https://github.com/coleslaw481/communitydetection-rest-server\n\n";
+            + "For usage information visit:  https://github.com/ndexbio/communitydetection-rest-server\n\n";
     
     /**
      * Sets logging level valid values DEBUG INFO WARN ALL ERROR
@@ -144,6 +144,7 @@ public class App {
                 initMap.put("javax.ws.rs.Application", "org.ndexbio.communitydetection.rest.CommunityDetectionApplication");
                 //initMap.put("openApi.configuration.prettyPrint", "true");
                 initMap.put("openApi.configuration.resourceClasses", "org.ndexbio.communitydetection.rest.services.CommunityDetection,org.ndexbio.communitydetection.rest.services.Status");
+                initMap.put("openApi.configuration.resourcePackages", "org.ndexbio.communitydetection.rest.model");
                 final ServletHolder restEasyServlet = new ServletHolder(
                      new CommunityDetectionHttpServletDispatcher());
                 
