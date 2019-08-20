@@ -7,15 +7,16 @@ import javax.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.servers.Server;
-import io.swagger.v3.oas.annotations.servers.ServerVariable;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -35,8 +36,13 @@ import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionEx
  * CommunityDetection service
  * @author churas
  */
+@OpenAPIDefinition( info = 
+    @Info(title = "Community Detection REST service",
+          version = "0.1.0",
+          description = "This service lets caller invoke various community detection clustering algorithms")
+)
 @Server(
-        description = "class server 1",
+        description = "default",
         url = Configuration.APPLICATION_PATH
         )
 @Path("/")
@@ -88,7 +94,7 @@ public class CommunityDetection {
             Task t = new Task();
             t.setId(id);
             return Response.status(202).location(new URI(Configuration.getInstance().getHostURL() +
-                                                         Configuration.APPLICATION_PATH + Configuration.V_ONE_PATH + "/" + id).normalize()).entity(omappy.writeValueAsString(t)).build();
+                                                         Configuration.V_ONE_PATH + "/" + id).normalize()).entity(omappy.writeValueAsString(t)).build();
         } catch(Exception ex){
             ErrorResponse er = new ErrorResponse("Error requesting CommunityDetection", ex);
             return Response.serverError().type(MediaType.APPLICATION_JSON).entity(er.asJson()).build();

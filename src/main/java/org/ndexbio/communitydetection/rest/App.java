@@ -124,7 +124,7 @@ public class App {
 		
 		
                 final int port = Integer.valueOf(props.getProperty(App.RUNSERVER_PORT, "8081"));
-                System.out.println("\nSpinning up server for status invoke: http://localhost:" + Integer.toString(port) + "/communitydetection/v1/status\n\n");
+                System.out.println("\nSpinning up server for status invoke: http://localhost:" + Integer.toString(port) + Configuration.APPLICATION_PATH + Configuration.V_ONE_PATH + "/status\n\n");
                 System.out.flush();
                 
                 //We are creating a print stream based on our RolloverFileOutputStream

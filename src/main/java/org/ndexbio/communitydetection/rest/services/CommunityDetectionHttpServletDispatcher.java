@@ -27,7 +27,7 @@ public class CommunityDetectionHttpServletDispatcher extends HttpServletDispatch
     private static String _version = "";
     private static String _buildNumber = "";
     private CommunityDetectionEngine _communityDetectionEngine;
-    private Thread _enrichmentEngineThread;
+    private Thread _communityDetectionEngineThread;
     
     
     public CommunityDetectionHttpServletDispatcher() throws CommunityDetectionException{
@@ -44,9 +44,9 @@ public class CommunityDetectionHttpServletDispatcher extends HttpServletDispatch
             _logger.debug("Creating CommunityDetection Engine from factory");
             _communityDetectionEngine = fac.getCommunityDetectionEngine();
             _logger.debug("Starting CommunityDetection Engine thread");
-            _enrichmentEngineThread = new Thread(_communityDetectionEngine);
-            _enrichmentEngineThread.start();
-            _logger.debug("CommunityDetection Engine thread running id => " + Long.toString(_enrichmentEngineThread.getId()));
+            _communityDetectionEngineThread = new Thread(_communityDetectionEngine);
+            _communityDetectionEngineThread.start();
+            _logger.debug("CommunityDetection Engine thread running id => " + Long.toString(_communityDetectionEngineThread.getId()));
             Configuration.getInstance().setCommunityDetectionEngine(_communityDetectionEngine);
         }
         catch(CommunityDetectionException ex){
@@ -71,15 +71,15 @@ public class CommunityDetectionHttpServletDispatcher extends HttpServletDispatch
             _communityDetectionEngine.shutdown();
             _logger.info("Waiting for CommunityDetection engine to shutdown");
             try {
-                if (_enrichmentEngineThread != null){
-                    _enrichmentEngineThread.join(10000);
+                if (_communityDetectionEngineThread != null){
+                    _communityDetectionEngineThread.join(10000);
                 }
             }
             catch(InterruptedException ie){
-                _logger.error("Caught exception waiting for enrichment engine to exit", ie);
+                _logger.error("Caught exception waiting for community detection engine to exit", ie);
             }
         } else {
-            _logger.error("No enrichment engine found to destroy");
+            _logger.error("No community detection engine found to destroy");
         
         }
     }

@@ -22,7 +22,7 @@ import org.ndexbio.communitydetection.rest.engine.CommunityDetectionEngine;
  * @author churas
  */
 @Server(
-        description = "class server 1",
+        description = "default",
         url = Configuration.APPLICATION_PATH
         )
 @Path("/")

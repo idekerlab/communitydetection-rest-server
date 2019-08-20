@@ -3,7 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>Swagger UI</title>
+    <title>Community Detection REST service Swagger UI</title>
     <link rel="stylesheet" type="text/css" href="./swagger-ui.css" >
     <link rel="icon" type="image/png" href="./favicon-32x32.png" sizes="32x32" />
     <link rel="icon" type="image/png" href="./favicon-16x16.png" sizes="16x16" />
@@ -37,6 +37,14 @@
     <script src="./swagger-ui-standalone-preset.js"> </script>
     <script>
     window.onload = function() {
+      function HideTopbarPlugin() {
+        // this plugin overrides the Topbar component to return nothing
+        return {
+          components: {
+            Topbar: function() { return null }
+          }
+        }
+      }
       // Begin Swagger UI call region
       const ui = SwaggerUIBundle({
         url: "communitydetection/openapi.json",
@@ -47,7 +55,8 @@
           SwaggerUIStandalonePreset
         ],
         plugins: [
-          SwaggerUIBundle.plugins.DownloadUrl
+          SwaggerUIBundle.plugins.DownloadUrl,
+          HideTopbarPlugin
         ],
         layout: "StandaloneLayout"
       })
