@@ -9,8 +9,8 @@
 Community Detection REST Service
 ==================================
 
-[![Build Status](https://travis-ci.org/coleslaw481/communitydetection_rest_server.svg?branch=master)](https://travis-ci.org/coleslaw481/communitydetection_rest_server) 
-[![Coverage Status](https://coveralls.io/repos/github/coleslaw481/communitydetection_rest_server/badge.svg)](https://coveralls.io/github/coleslaw481/communitydetection_rest_server)
+[![Build Status](https://travis-ci.org/ndexbio/communitydetection-rest-server.svg?branch=master)](https://travis-ci.org/ndexbio/communitydetection-rest-server) 
+[![Coverage Status](https://coveralls.io/repos/github/ndexbio/communitydetection-rest-server/badge.svg)](https://coveralls.io/github/ndexbio/communitydetection-rest-server)
 
 Provides REST service for several CommunityDetection algorithms.
 
@@ -28,7 +28,7 @@ Requirements
 
 Special software to install (cause we haven't put these into maven central)
 
-* [ndex-enrichment-rest-model](https://github.com/coleslaw481/communitydetection-rest-model) built and installed via `mvn install`
+* [ndex-enrichment-rest-model](https://github.com/ndexbio/communitydetection-rest-model) built and installed via `mvn install`
 
 
 
@@ -40,9 +40,9 @@ installed and above Java modules have been installed.
 
 ```Bash
 # In lieu of git one can just download repo and unzip it
-git clone https://github.com/coleslaw481/communitydetection_rest_server.git
+git clone https://github.com/ndexbio/communitydetection-rest-server.git
 
-cd communitydetection_rest_server
+cd communitydetection-rest-server
 mvn clean test install
 ```
 
