@@ -75,7 +75,7 @@ public class CommunityDetection {
                                 content = @Content(mediaType = MediaType.APPLICATION_JSON,
                                 schema = @Schema(implementation = ErrorResponse.class)))
                })
-    public Response request(@RequestBody(description="Query", required = true,
+    public Response request(@RequestBody(description="Request as json", required = true,
                                                    content = @Content(schema = @Schema(implementation = CommunityDetectionRequest.class))) final String query) {
         ObjectMapper omappy = new ObjectMapper();
 
