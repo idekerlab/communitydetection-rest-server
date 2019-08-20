@@ -43,7 +43,7 @@ import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionEx
 )
 @Server(
         description = "default",
-        url = Configuration.APPLICATION_PATH
+        url = "/cd" + Configuration.APPLICATION_PATH
         )
 @Path("/")
 public class CommunityDetection {
@@ -59,7 +59,8 @@ public class CommunityDetection {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Submits Community Detection task",
-               description="Payload in JSON will have edgelist along with algorithm to run and any algorithm specific parameters\n" +
+               description="Payload in JSON format needs to have edgeList along with name of  algorithm to run "
+                       + "and any algorithm specific parameters\n" +
 "\n" +
 "The service should upon post return 202 and set location to resource to poll for result. Which will\n" +
 "Match the URL of GET request below.",

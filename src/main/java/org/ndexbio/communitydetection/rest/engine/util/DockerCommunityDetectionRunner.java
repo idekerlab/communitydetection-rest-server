@@ -1,5 +1,6 @@
 package org.ndexbio.communitydetection.rest.engine.util;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;

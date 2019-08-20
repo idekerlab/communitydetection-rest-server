@@ -23,7 +23,7 @@ import org.ndexbio.communitydetection.rest.engine.CommunityDetectionEngine;
  */
 @Server(
         description = "default",
-        url = Configuration.APPLICATION_PATH
+        url = "/cd" + Configuration.APPLICATION_PATH
         )
 @Path("/")
 public class Status {
