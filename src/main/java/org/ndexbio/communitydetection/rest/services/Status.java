@@ -1,7 +1,5 @@
 package org.ndexbio.communitydetection.rest.services; // Note your package will be {{ groupId }}.rest
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import java.lang.management.ManagementFactory;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -13,19 +11,21 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import java.io.File;
-import java.lang.management.OperatingSystemMXBean;
+import io.swagger.v3.oas.annotations.servers.Server;
 import javax.ws.rs.core.Response;
 import org.ndexbio.communitydetection.rest.model.ErrorResponse;
 import org.ndexbio.communitydetection.rest.model.ServerStatus;
-import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionException;
 import org.ndexbio.communitydetection.rest.engine.CommunityDetectionEngine;
 
 /**
  * Returns status of Server
  * @author churas
  */
-@Path(Configuration.APPLICATION_PATH)
+@Server(
+        description = "class server 1",
+        url = Configuration.APPLICATION_PATH
+        )
+@Path("/")
 public class Status {
     
     /**

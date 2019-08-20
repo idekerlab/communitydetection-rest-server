@@ -19,14 +19,15 @@ import org.eclipse.jetty.util.RolloverFileOutputStream;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.jboss.resteasy.plugins.server.servlet.FilterDispatcher;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionException;
 import org.ndexbio.communitydetection.rest.services.Configuration;
 import org.ndexbio.communitydetection.rest.services.CommunityDetectionHttpServletDispatcher;
 
@@ -139,9 +140,9 @@ public class App {
                 
                 HashMap<String, String> initMap = new HashMap<>();
                 initMap.put("resteasy.servlet.mapping.prefix",
-                            Configuration.APPLICATION_PATH);
+                            Configuration.APPLICATION_PATH + "/");
                 initMap.put("javax.ws.rs.Application", "org.ndexbio.communitydetection.rest.CommunityDetectionApplication");
-                initMap.put("openApi.configuration.prettyPrint", "true");
+                //initMap.put("openApi.configuration.prettyPrint", "true");
                 initMap.put("openApi.configuration.resourceClasses", "org.ndexbio.communitydetection.rest.services.CommunityDetection,org.ndexbio.communitydetection.rest.services.Status");
                 final ServletHolder restEasyServlet = new ServletHolder(
                      new CommunityDetectionHttpServletDispatcher());
@@ -149,9 +150,16 @@ public class App {
                 restEasyServlet.setInitOrder(1);
                 restEasyServlet.setInitParameters(initMap);
                 webappContext.addServlet(restEasyServlet,
-                                         Configuration.APPLICATION_PATH + "/*");
+                                          Configuration.APPLICATION_PATH + "/*");
                 webappContext.addFilter(CorsFilter.class,
                                         Configuration.APPLICATION_PATH + "/*", null);
+                webappContext.addFilter(FilterDispatcher.class, "/*", null);
+                
+                String resourceBasePath = App.class.getResource("/webapp").toExternalForm();
+                webappContext.setWelcomeFiles(new String[] { "index.html" });
+                webappContext.setResourceBase(resourceBasePath);
+                webappContext.addServlet(new ServletHolder(new DefaultServlet()), "/*");
+                
                 ContextHandlerCollection contexts = new ContextHandlerCollection();
                 contexts.setHandlers(new Handler[] { webappContext });
  
