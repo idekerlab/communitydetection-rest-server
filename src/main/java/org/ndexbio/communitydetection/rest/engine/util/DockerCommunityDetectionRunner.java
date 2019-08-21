@@ -128,7 +128,7 @@ public class DockerCommunityDetectionRunner implements Callable {
         if (exitValue != 0){
                 cdr.setStatus(CommunityDetectionResult.FAILED_STATUS);
                 cdr.setMessage("Received non zero exit code: " +
-                        Integer.toString(exitValue) + " when running algorithm");
+                        Integer.toString(exitValue) + " when running algorithm for task: " + cdr.getId());
                 outFile = stdErrFile;
                 _logger.error(cdr.getMessage());
         } else {
@@ -175,7 +175,7 @@ public class DockerCommunityDetectionRunner implements Callable {
         } catch(Exception ex){
             cdr.setStatus(CommunityDetectionResult.FAILED_STATUS);
             cdr.setMessage("Received error trying to run detection: " + ex.getMessage());
-            _logger.error("Received error trying to run algorithm", ex);
+            _logger.error("Received error trying to run algorithm for task in " + _workDir, ex);
         }
         cdr.setProgress(100);
         cdr.setWallTime(System.currentTimeMillis() - cdr.getStartTime());

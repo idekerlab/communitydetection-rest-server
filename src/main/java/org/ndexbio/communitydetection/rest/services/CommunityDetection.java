@@ -38,8 +38,11 @@ import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionEx
  */
 @OpenAPIDefinition( info = 
     @Info(title = "Community Detection REST service",
-          version = "0.1.0",
-          description = "This service lets caller invoke various community detection clustering algorithms")
+          version = "0.2.0",
+          description = "This service lets caller invoke various community detection clustering "
+                  + "algorithms\n\n "
+                  + "<b>NOTE:</b> This service is experimental. The interface is subject to change.\n" +
+"")
 )
 @Server(
         description = "default",
