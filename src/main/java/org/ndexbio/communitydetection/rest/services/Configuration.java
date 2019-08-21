@@ -33,6 +33,8 @@ public class Configuration {
     public static final String NUM_WORKERS = "communitydetection.number.workers";
     public static final String DOCKER_CMD = "communitydetection.docker.cmd";
     public static final String ALGORITHM_MAP = "communitydetection.algorithm.map";
+    public static final String ALGORITHM_TIMEOUT = "communitydetection.algorithm.timeout";
+    
     
     private static Configuration INSTANCE;
     private static final Logger _logger = LoggerFactory.getLogger(Configuration.class);
@@ -43,6 +45,7 @@ public class Configuration {
     private static String _dockerCmd;
     private static int _numWorkers;
     private static HashMap<String, String> _algoMap;
+    private static long _timeOut;
     
     /**
      * Constructor that attempts to get configuration from properties file
@@ -71,6 +74,7 @@ public class Configuration {
         _hostURL = props.getProperty(Configuration.HOST_URL, "");
         _dockerCmd = props.getProperty(Configuration.DOCKER_CMD, "docker");
         _algoMap = parseAlgorithmMap(props.getProperty(Configuration.ALGORITHM_MAP, "{\"infomap\": \"coleslawndex/infomap\"}"));
+        _timeOut = Long.parseLong(props.getProperty(Configuration.ALGORITHM_TIMEOUT, "180"));
         if (_hostURL.trim().isEmpty()){
             _hostURL = "";
         } else if (!_hostURL.endsWith("/")){
@@ -125,6 +129,10 @@ public class Configuration {
     
     public int getNumberWorkers(){
         return _numWorkers;
+    }
+    
+    public long getAlgorithmTimeOut(){
+        return _timeOut;
     }
     
     public String getDockerCommand(){

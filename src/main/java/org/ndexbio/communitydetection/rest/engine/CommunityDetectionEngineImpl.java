@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.ndexbio.communitydetection.rest.engine.util.DockerCommunityDetectionRunner;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequest;
@@ -26,6 +27,7 @@ import org.ndexbio.communitydetection.rest.model.ServerStatus;
 import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionException;
 
 import org.ndexbio.communitydetection.rest.services.CommunityDetectionHttpServletDispatcher;
+import org.ndexbio.communitydetection.rest.services.Configuration;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -188,7 +190,8 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
         String dockerImage = _algoToDockerMap.get(request.getAlgorithm());
         try {
             DockerCommunityDetectionRunner task = new DockerCommunityDetectionRunner(id, request, cdr.getStartTime(),
-            _taskDir, _dockerCmd, dockerImage);
+            _taskDir, _dockerCmd, dockerImage, Configuration.getInstance().getAlgorithmTimeOut(),
+            TimeUnit.SECONDS);
             _futureTaskList.add(_executorService.submit(task));
             return id;
         } catch(Exception ex){

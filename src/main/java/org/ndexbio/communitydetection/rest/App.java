@@ -20,8 +20,10 @@ import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.servlet.DefaultServlet;
+import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.servlets.DoSFilter;
 import org.jboss.resteasy.plugins.server.servlet.FilterDispatcher;
 
 import org.slf4j.Logger;
@@ -62,6 +64,10 @@ public class App {
      * Sets context path for embedded Jetty
      */
     public static final String RUNSERVER_CONTEXTPATH = "runserver.contextpath";
+    
+    public static final String RUNSERVER_DOSFILTER_MAX_REQS = "runserver.dosfilter.maxrequestspersec";
+    
+    public static final String RUNSERVER_DOSFILTER_DELAY = "runserver.dosfilter.delayms";
     
     public static final String MODE = "mode";
     public static final String CONF = "conf";    
@@ -155,6 +161,10 @@ public class App {
                 webappContext.addFilter(CorsFilter.class,
                                         Configuration.APPLICATION_PATH + "/*", null);
                 webappContext.addFilter(FilterDispatcher.class, "/*", null);
+                FilterHolder dosFilterHolder = new FilterHolder(DoSFilter.class);
+                dosFilterHolder.setInitParameter("maxRequestsPerSec", props.getProperty(App.RUNSERVER_DOSFILTER_MAX_REQS, "2"));
+                dosFilterHolder.setInitParameter("delayMs", props.getProperty(App.RUNSERVER_DOSFILTER_DELAY, "200"));
+                webappContext.addFilter(dosFilterHolder, "/*",null);
                 
                 String resourceBasePath = App.class.getResource("/webapp").toExternalForm();
                 webappContext.setWelcomeFiles(new String[] { "index.html" });
@@ -204,6 +214,9 @@ public class App {
         sb.append("# Docker command to run\n");
         sb.append(Configuration.DOCKER_CMD + " = docker\n\n");
         
+        sb.append("# Algorithm/ docker command timeout in seconds. Anything taking longer will be killed\n");
+        sb.append(Configuration.ALGORITHM_TIMEOUT + " = 180\n\n");
+        
         sb.append("# Json fragment that is a mapping of algorithm names to docker images\n");
         sb.append(Configuration.ALGORITHM_MAP + " = {\"infomap\": \"coleslawndex/infomap\"}\n\n");
         
@@ -216,8 +229,14 @@ public class App {
         sb.append("# Sets port Jetty web service will be run under\n");
         sb.append(App.RUNSERVER_PORT + " = 8081\n\n");
         
-        sb.append("# sets Jetty Context Path for Community Detection\n");
+        sb.append("# Sets Jetty Context Path for Community Detection\n");
         sb.append(App.RUNSERVER_CONTEXTPATH + " = /\n\n");
+        
+        sb.append("# Sets DoS Filter maxRequestsPerSec See: https://www.eclipse.org/jetty/documentation/current/dos-filter.html\n");
+        sb.append(App.RUNSERVER_DOSFILTER_MAX_REQS + " = 1\n\n");
+        
+        sb.append("# Sets DoS Filter delayMs See: https://www.eclipse.org/jetty/documentation/current/dos-filter.html\n");
+        sb.append(App.RUNSERVER_DOSFILTER_DELAY + " = 200\n\n");
         
         sb.append("# Valid log levels DEBUG INFO WARN ERROR ALL\n");
         sb.append(App.RUNSERVER_LOGLEVEL + " = INFO\n");

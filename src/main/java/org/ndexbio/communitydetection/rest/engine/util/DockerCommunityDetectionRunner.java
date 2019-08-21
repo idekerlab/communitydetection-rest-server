@@ -1,12 +1,17 @@
 package org.ndexbio.communitydetection.rest.engine.util;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequest;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -14,7 +19,13 @@ import org.ndexbio.communitydetection.rest.model.CommunityDetectionResult;
  */
 public class DockerCommunityDetectionRunner implements Callable {
 
+    
+    static Logger _logger = LoggerFactory.getLogger(DockerCommunityDetectionRunner.class);
+
     public static final String INPUTEDGE_FILE = "edgelist.txt";
+    public static final String STD_OUT_FILE = "stdout.txt";
+    public static final String STD_ERR_FILE = "stderr.txt";
+    public static final String CMD_RUN_FILE = "cmdrun.sh";
     
     private String _id;
     private CommunityDetectionRequest _cdr;
@@ -22,18 +33,23 @@ public class DockerCommunityDetectionRunner implements Callable {
     private String _dockerImage;
     private String _workDir;
     private long _startTime;
+    private long _timeOut;
+    private TimeUnit _timeUnit;
  
     private CommandLineRunner _runner;
     
     public DockerCommunityDetectionRunner(final String id,
             final CommunityDetectionRequest cdr, final long startTime, final String taskDir,
-            final String dockerCmd, final String dockerImage) throws Exception{
+            final String dockerCmd, final String dockerImage, final long timeOut,
+            final TimeUnit unit) throws Exception{
         _id = id;
         _cdr = cdr;
         _dockerCmd = dockerCmd;
         _dockerImage = dockerImage;
         _startTime = startTime;
         _workDir = taskDir + File.separator + _id;
+        _timeOut = timeOut;
+        _timeUnit = unit;
         writeEdgeListFile();
        
         _runner = new CommandLineRunnerImpl();
@@ -68,6 +84,70 @@ public class DockerCommunityDetectionRunner implements Callable {
         }
     }
     
+    protected File getStandardOutFile(){
+        return new File(_workDir + File.separator + DockerCommunityDetectionRunner.STD_OUT_FILE);
+    }
+    
+    protected File getStandardErrorFile(){
+        return new File(_workDir + File.separator + DockerCommunityDetectionRunner.STD_ERR_FILE);
+    }
+    
+    protected File getCommandRunFile(){
+        return new File(_workDir + File.separator + DockerCommunityDetectionRunner.CMD_RUN_FILE);
+    }
+    
+    protected CommunityDetectionResult createCommunityDetectionResult(){
+        CommunityDetectionResult cdr = new CommunityDetectionResult();
+        cdr.setId(_id);
+        cdr.setProgress(0);
+        cdr.setStartTime(_startTime);
+        cdr.setStatus(CommunityDetectionResult.PROCESSING_STATUS);
+        return cdr;
+    }
+    
+    protected void updateCommunityDetectionResultWithFileContents(CommunityDetectionResult cdr, File outFile) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        if (outFile.isFile() == false){
+            _logger.error(outFile.getAbsolutePath() + " does not exist or is not a file");
+            return;
+        }
+        
+        try (BufferedReader br = new BufferedReader(new FileReader(outFile))){
+            String line = br.readLine();
+            while(line != null){
+                sb.append(line).append("\n");
+                line = br.readLine();
+            }
+            cdr.setResult(sb.toString());
+        }
+    }
+    
+    protected void updateCommunityDetectionResult(int exitValue, File stdOutFile, File stdErrFile, CommunityDetectionResult cdr) throws Exception {
+        
+        File outFile = stdOutFile;
+        if (exitValue != 0){
+                cdr.setStatus(CommunityDetectionResult.FAILED_STATUS);
+                cdr.setMessage("Received non zero exit code: " +
+                        Integer.toString(exitValue) + " when running algorithm");
+                outFile = stdErrFile;
+                _logger.error(cdr.getMessage());
+        } else {
+            
+                cdr.setStatus(CommunityDetectionResult.COMPLETE_STATUS);
+        }
+        updateCommunityDetectionResultWithFileContents(cdr, outFile);
+    }
+    
+    protected void writeCommandRunToFile(){
+        File outFile = getCommandRunFile();
+        
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(outFile))){
+            bw.write(_runner.getLastCommand());
+        } catch(IOException io){
+            _logger.error("Error writing command run to: " + outFile.getAbsolutePath(), io);
+        }
+    }
+    
     @Override
     public CommunityDetectionResult call() throws Exception {
         
@@ -78,26 +158,26 @@ public class DockerCommunityDetectionRunner implements Callable {
         
         String inputFile = writeEdgeListFile();
         
-        CommunityDetectionResult cdr = new CommunityDetectionResult();
-        cdr.setId(_id);
-        cdr.setProgress(0);
-        cdr.setStartTime(_startTime);
-        cdr.setStatus(CommunityDetectionResult.PROCESSING_STATUS);
+        File stdOutFile = getStandardOutFile();
+        File stdErrFile = getStandardErrorFile();
+        
+        CommunityDetectionResult cdr = createCommunityDetectionResult();
+        
         try {
             if (workDir.isDirectory() == false){
                 throw new Exception(_workDir + " directory does not exist");
             }
-            String res = _runner.runCommandLineProcess(_dockerCmd, "run", "-v", mapDir,
-                                                       _dockerImage, inputFile);
+            int  exitValue = _runner.runCommandLineProcess(_timeOut, _timeUnit, stdOutFile, stdErrFile, _dockerCmd, "run", "-v", mapDir,
+                                                         _dockerImage, inputFile);
+            writeCommandRunToFile();
+            updateCommunityDetectionResult(exitValue, stdOutFile, stdErrFile, cdr);
             
-            cdr.setResult(res);
-            cdr.setStatus(CommunityDetectionResult.COMPLETE_STATUS);
-            cdr.setProgress(100);
         } catch(Exception ex){
             cdr.setStatus(CommunityDetectionResult.FAILED_STATUS);
             cdr.setMessage("Received error trying to run detection: " + ex.getMessage());
+            _logger.error("Received error trying to run algorithm", ex);
         }
-        
+        cdr.setProgress(100);
         cdr.setWallTime(System.currentTimeMillis() - cdr.getStartTime());
         return cdr;          
     }
