@@ -1,11 +1,9 @@
 package org.ndexbio.communitydetection.rest.engine.util;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +35,8 @@ public class CommandLineRunnerImpl implements CommandLineRunner {
     }
     
     @Override
-    public String runCommandLineProcess(String... command) throws Exception {        
+    public int runCommandLineProcess(long timeOut, TimeUnit unit,
+            File stdOutFile, File stdErrFile, String... command) throws Exception {        
         ArrayList<String> mCmd = new ArrayList<String>();
         _lastCommand = null;
         StringBuilder lastCmdSb = new StringBuilder();
@@ -70,27 +69,15 @@ public class CommandLineRunnerImpl implements CommandLineRunner {
                 env.put(key, _environVars.get(key));
             }
         }
-
-        pb.redirectErrorStream(true);
+        pb.redirectError(stdErrFile);
+        pb.redirectOutput(stdOutFile);
 
         Process proc = pb.start();
-
-        StringBuilder sb = new StringBuilder();
-
-        BufferedInputStream bis = new BufferedInputStream(proc.getInputStream());
-
-        BufferedReader br = new BufferedReader(new InputStreamReader(bis));
-        String line = br.readLine();
-        while (line != null) {
-            sb.append(line).append("\n");
-            line = br.readLine();
-        }
-        br.close();
-        int retVal = proc.waitFor();
-        if (retVal != 0){
-            throw new Exception("Non zero exit code ("+retVal+") received from "+
-                    mCmd.get(0) + ": " + sb.toString());
-        }
-        return sb.toString();
+        
+        if (proc.waitFor(timeOut, unit) == false){
+            proc.destroyForcibly();
+            return 500;
+        } 
+        return proc.exitValue();        
     }
 }
