@@ -173,8 +173,8 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
         if (request.getAlgorithm() == null){
             throw new CommunityDetectionException("No algorithm specified");
         }
-        if (request.getEdgeList() == null){
-            throw new CommunityDetectionException("Edge list is null");
+        if (request.getData()== null){
+            throw new CommunityDetectionException("data is null");
         }
         String id = UUID.randomUUID().toString();
 

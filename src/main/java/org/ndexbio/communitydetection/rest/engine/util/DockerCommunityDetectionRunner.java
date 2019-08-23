@@ -1,5 +1,7 @@
 package org.ndexbio.communitydetection.rest.engine.util;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.TextNode;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -68,20 +70,10 @@ public class DockerCommunityDetectionRunner implements Callable {
                 throw new Exception("Unable to create directory: " + _workDir);
             }
         }
-        
+        ObjectMapper mapper = new ObjectMapper();
         File destFile = new File(_workDir + File.separator + INPUTEDGE_FILE);
-        BufferedWriter bw = null;
-        try {
-            bw = new BufferedWriter(new FileWriter(destFile));
-            bw.write(_cdr.getEdgeList());
-            bw.flush();
-            return destFile.getAbsolutePath();
-        }
-        finally {
-            if (bw != null){
-                bw.close();
-            }
-        }
+        mapper.writeValue(destFile, _cdr.getData()); 
+        return destFile.getAbsolutePath();
     }
     
     protected File getStandardOutFile(){
@@ -111,15 +103,8 @@ public class DockerCommunityDetectionRunner implements Callable {
             _logger.error(outFile.getAbsolutePath() + " does not exist or is not a file");
             return;
         }
-        
-        try (BufferedReader br = new BufferedReader(new FileReader(outFile))){
-            String line = br.readLine();
-            while(line != null){
-                sb.append(line).append("\n");
-                line = br.readLine();
-            }
-            cdr.setResult(sb.toString());
-        }
+        ObjectMapper mapper = new ObjectMapper();
+        cdr.setResult(mapper.readTree(outFile));
     }
     
     protected void updateCommunityDetectionResult(int exitValue, File stdOutFile, File stdErrFile, CommunityDetectionResult cdr) throws Exception {
