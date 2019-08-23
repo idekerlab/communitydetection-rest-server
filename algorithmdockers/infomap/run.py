@@ -21,6 +21,8 @@ def _parse_arguments(desc, args):
                         help='Edge file in tab delimited format')
     parser.add_argument('--directed', action='store_true',
                         help='If set, then generate directed graph')
+    parser.add_argument('--disableoverlapping', action='store_true',
+                        help='If set, disable infomap overlapping')
     return parser.parse_args(args)
 
 
@@ -185,7 +187,7 @@ def main(args):
         else:
             dval = False
 
-        return run_infomap(inputfile, directed=dval)
+        return run_infomap(inputfile, overlap=not theargs.disableoverlapping, directed=dval)
     except Exception as e:
         sys.stderr.write('Caught exception: ' + str(e))
         return 2
