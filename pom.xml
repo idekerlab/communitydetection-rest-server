@@ -21,7 +21,7 @@
         <jackson.version>2.9.9</jackson.version>
         <jackson-databind.version>2.9.9.3</jackson-databind.version>
         <logback.version>1.2.3</logback.version>
-        <communitydetection-rest-model.version>0.2.0</communitydetection-rest-model.version>
+        <communitydetection-rest-model.version>0.2.1</communitydetection-rest-model.version>
         <commons-math3.version>3.6.1</commons-math3.version>
         <commons-io.version>2.6</commons-io.version>
         <jopt-simple.version>5.0.4</jopt-simple.version>
