@@ -46,7 +46,7 @@ import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionEx
 )
 @Server(
         description = "default",
-        url = Configuration.APPLICATION_PATH
+        url = "/cd" + Configuration.APPLICATION_PATH
         )
 @Path("/")
 public class CommunityDetection {

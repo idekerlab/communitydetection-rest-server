@@ -69,7 +69,7 @@ public class DockerCommunityDetectionRunner implements Callable {
             }
         }
         
-        File destFile = new File(_workDir + File.separator + DockerCommunityDetectionRunner.INPUTEDGE_FILE);
+        File destFile = new File(_workDir + File.separator + INPUTEDGE_FILE);
         BufferedWriter bw = null;
         try {
             bw = new BufferedWriter(new FileWriter(destFile));
@@ -85,15 +85,15 @@ public class DockerCommunityDetectionRunner implements Callable {
     }
     
     protected File getStandardOutFile(){
-        return new File(_workDir + File.separator + DockerCommunityDetectionRunner.STD_OUT_FILE);
+        return new File(_workDir + File.separator + STD_OUT_FILE);
     }
     
     protected File getStandardErrorFile(){
-        return new File(_workDir + File.separator + DockerCommunityDetectionRunner.STD_ERR_FILE);
+        return new File(_workDir + File.separator + STD_ERR_FILE);
     }
     
     protected File getCommandRunFile(){
-        return new File(_workDir + File.separator + DockerCommunityDetectionRunner.CMD_RUN_FILE);
+        return new File(_workDir + File.separator + CMD_RUN_FILE);
     }
     
     protected CommunityDetectionResult createCommunityDetectionResult(){
