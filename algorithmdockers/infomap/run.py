@@ -71,7 +71,7 @@ def get_truncated_file(inputfile):
 
 
 def run_infomap(graph,
-                overlap=False, directed=False):
+                overlap=True, directed=False):
 
     """
     :outdir: the output directory to comprehend the output link file
