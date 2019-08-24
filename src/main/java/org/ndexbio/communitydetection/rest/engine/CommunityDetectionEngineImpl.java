@@ -7,13 +7,12 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -47,7 +46,7 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
     private String _taskDir;
     private boolean _shutdown;
     private ExecutorService _executorService;
-    private  List<Future> _futureTaskList;
+    private ConcurrentLinkedQueue<Future> _futureTaskQueue;
     private HashMap<String, String> _algoToDockerMap;
     private String _dockerCmd;
         
@@ -64,8 +63,7 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
             final HashMap<String, String> algoToDockerMap){
         _executorService = es;
         _shutdown = false;
-        _futureTaskList = Collections
-            .synchronizedList(new LinkedList<Future>());
+        _futureTaskQueue = new ConcurrentLinkedQueue<>();
         _taskDir = taskDir;
         _dockerCmd = dockerCmd;
         _algoToDockerMap = algoToDockerMap;
@@ -96,7 +94,7 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
     public void run() {
         while(_shutdown == false){
             Future f;
-            Iterator<Future> itr = _futureTaskList.iterator();
+            Iterator<Future> itr = _futureTaskQueue.iterator();
             while(itr.hasNext()){
                 f = itr.next();
                 if (f.isCancelled() || f.isDone()){
@@ -109,6 +107,9 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
                             continue;
                         } catch (ExecutionException ex) {
                             _logger.error("Got execution exception", ex);
+                            continue;
+                        } catch (CancellationException ex){
+                            _logger.error("Got cancelation exception", ex);
                             continue;
                         }
                         saveCommunityDetectionResultToFilesystem(cdr);
@@ -192,7 +193,7 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
             DockerCommunityDetectionRunner task = new DockerCommunityDetectionRunner(id, request, cdr.getStartTime(),
             _taskDir, _dockerCmd, dockerImage, Configuration.getInstance().getAlgorithmTimeOut(),
             TimeUnit.SECONDS);
-            _futureTaskList.add(_executorService.submit(task));
+            _futureTaskQueue.add(_executorService.submit(task));
             return id;
         } catch(Exception ex){
             throw new CommunityDetectionException(ex.getMessage());
