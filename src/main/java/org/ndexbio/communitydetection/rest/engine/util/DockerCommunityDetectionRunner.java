@@ -1,5 +1,6 @@
 package org.ndexbio.communitydetection.rest.engine.util;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.TextNode;
 import java.io.BufferedReader;
@@ -70,9 +71,16 @@ public class DockerCommunityDetectionRunner implements Callable {
                 throw new Exception("Unable to create directory: " + _workDir);
             }
         }
-        ObjectMapper mapper = new ObjectMapper();
         File destFile = new File(_workDir + File.separator + INPUTEDGE_FILE);
-        mapper.writeValue(destFile, _cdr.getData()); 
+        if (_cdr.getData()instanceof TextNode){
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(destFile))){
+                bw.write(_cdr.getData().asText());
+            }
+        }
+        else {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.writeValue(destFile, _cdr.getData()); 
+        }
         return destFile.getAbsolutePath();
     }
     
@@ -104,7 +112,19 @@ public class DockerCommunityDetectionRunner implements Callable {
             return;
         }
         ObjectMapper mapper = new ObjectMapper();
-        cdr.setResult(mapper.readTree(outFile));
+        try {
+            cdr.setResult(mapper.readTree(outFile));
+        } catch(JsonParseException jpe){
+            _logger.debug("Received a json parsing error going to try to store result as string: ", jpe);
+            try (BufferedReader br = new BufferedReader(new FileReader(outFile))){
+                String line = br.readLine();
+                while(line != null){
+                    sb.append(line).append("\n");
+                    line = br.readLine();
+                }
+                cdr.setResult(new TextNode(sb.toString()));
+            }
+        }
     }
     
     protected void updateCommunityDetectionResult(int exitValue, File stdOutFile, File stdErrFile, CommunityDetectionResult cdr) throws Exception {
