@@ -4,11 +4,13 @@ import os
 import sys
 import argparse
 import json
+import math
 from contextlib import redirect_stdout
 import ndex2
 from ndex2.nice_cx_network import NiceCXNetwork
 from ndex2.nice_cx_network import DefaultNetworkXFactory
 import networkx as nx
+
 
 def _parse_arguments(desc, args):
     """
@@ -62,13 +64,15 @@ def get_targetdegree_map(network):
     :param network:
     :return:
     """
-    factor = 1000
     target_degree_map = {}
     for edgeid, edge in network.get_edges():
         if edge['s'] not in target_degree_map:
-            target_degree_map[edge['s']] = factor
+            target_degree_map[edge['s']] = 1
             continue
-        target_degree_map[edge['s']] = target_degree_map[edge['s']] + factor
+        target_degree_map[edge['s']] = target_degree_map[edge['s']] + 1
+    sys.stderr.write(str(target_degree_map) + '\n')
+    sys.stderr.write('Total # of nodes: ' + str(len(network.get_nodes())) + '\n')
+    sys.stderr.write('Number of trees: ' + str(len(target_degree_map)) + '\n')
     return target_degree_map
 
 
@@ -82,13 +86,33 @@ def weight_edges_by_node_degree(network):
 
     for edgeid, edge in network.get_edges():
         if edge['s'] not in target_degree_map:
-            weight = 1
+            weight = 0
         else:
             weight = target_degree_map[edge['s']]
         network.set_edge_attribute(edgeid, 'weight', weight, type='integer')
+    return target_degree_map
 
 
-def apply_layout_to_network(network, theargs):
+def get_pos_values(target_node_degree):
+    """
+
+    :param target_node_degree:
+    :return:
+    """
+    posdict = {}
+    x = 0
+    y = 0
+    for nodeid in target_node_degree.keys():
+        posdict[nodeid] = (x, y)
+        x = x + 500
+        if x > 5000:
+            x = 0
+            y = y + 500
+
+    return posdict, target_node_degree.keys()
+
+
+def apply_layout_to_network(network, theargs, target_node_degree):
     """
     applies layout to network
 
@@ -98,10 +122,16 @@ def apply_layout_to_network(network, theargs):
     fac = DefaultNetworkXFactory()
     netx = fac.get_graph(network, None)
     num_nodes = len(network.get_nodes())
+    # sys.stderr.write(str(list(netx.nodes(data=True))) + '\n')
+    # sys.stderr.write(str(list(netx.edges(data=True))) + '\n')
+
+    posdict, fixedlist = get_pos_values(target_node_degree)
+
     netx.pos = nx.drawing.spring_layout(netx, scale=theargs.scale,
                                         k=theargs.k, iterations=theargs.iterations,
                                         weight=theargs.weight,
-                                        seed=theargs.seed)
+                                        seed=theargs.seed,
+                                        pos=posdict, fixed=fixedlist)
     network.set_opaque_aspect("cartesianLayout", cartesian(netx))
 
 
@@ -113,9 +143,9 @@ def run_springlayout(inputfile, theargs):
     """
     net = ndex2.create_nice_cx_from_file(inputfile)
 
-    weight_edges_by_node_degree(net)
+    target_node_degree = weight_edges_by_node_degree(net)
 
-    apply_layout_to_network(net, theargs)
+    apply_layout_to_network(net, theargs, target_node_degree)
     # the ndex2 python client versions 3.2 and earlier outputs debugging messages
     # to standard out and there is no way to disable that so we
     # are piping that output to standard error here
