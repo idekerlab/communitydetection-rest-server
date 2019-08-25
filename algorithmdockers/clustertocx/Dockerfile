@@ -7,6 +7,7 @@ RUN pip install ndex2
 
 
 COPY run.py /run.py
+COPY style.cx /style.cx
 
 ENTRYPOINT ["/run.py"]
 CMD ["--help"]
