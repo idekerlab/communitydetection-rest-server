@@ -27,6 +27,7 @@ import javax.ws.rs.core.Response;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequest;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionResult;
 import org.ndexbio.communitydetection.rest.engine.CommunityDetectionEngine;
+import org.ndexbio.communitydetection.rest.model.CommunityDetectionAlgorithms;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionResultStatus;
 import org.ndexbio.communitydetection.rest.model.ErrorResponse;
 import org.ndexbio.communitydetection.rest.model.Task;
@@ -38,7 +39,7 @@ import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionEx
  */
 @OpenAPIDefinition( info = 
     @Info(title = "Community Detection REST service",
-          version = "0.3.0",
+          version = "0.4.0",
           description = "This service lets caller invoke various community detection clustering "
                   + "algorithms\n\n "
                   + "<b>NOTE:</b> This service is experimental. The interface is subject to change.\n" +
@@ -141,6 +142,42 @@ public class CommunityDetection {
         }
         catch(Exception ex){
             ErrorResponse er = new ErrorResponse("Error getting results for id: " + id, ex);
+            return Response.status(500).type(MediaType.APPLICATION_JSON).entity(er.asJson()).build();
+        }
+    }
+    
+    @GET
+    @Path(Configuration.V_ONE_PATH + "/algorithms")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Gets list of algorithms supported by this service",
+               description = "Provides detailed information about each algorithm/task that can be used with this service",
+               responses = {@ApiResponse(responseCode = "200",
+                           description = "Success",
+                           content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                                schema = @Schema(implementation = CommunityDetectionAlgorithms.class))),
+                   @ApiResponse(responseCode = "410",
+                           description = "Task not found"),
+                   @ApiResponse(responseCode = "500", description = "Server Error",
+                                content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                                schema = @Schema(implementation = ErrorResponse.class)))            
+               })
+    public Response getAlgorithms(){
+        ObjectMapper omappy = new ObjectMapper();
+
+        try {
+            CommunityDetectionEngine engine = Configuration.getInstance().getCommunityDetectionEngine();
+            if (engine == null){
+                throw new NullPointerException("CommunityDetection Engine not loaded");
+            }
+            
+            CommunityDetectionAlgorithms cda = engine.getAlgorithms();
+            if (cda == null){
+                return Response.status(410).build();
+            }
+            return Response.ok().type(MediaType.APPLICATION_JSON).entity(omappy.writeValueAsString(cda)).build();
+        }
+        catch(Exception ex){
+            ErrorResponse er = new ErrorResponse("Error trying to get list of algorithms", ex);
             return Response.status(500).type(MediaType.APPLICATION_JSON).entity(er.asJson()).build();
         }
     }
