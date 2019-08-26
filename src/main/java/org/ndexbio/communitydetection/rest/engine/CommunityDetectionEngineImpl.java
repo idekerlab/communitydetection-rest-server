@@ -19,6 +19,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.ndexbio.communitydetection.rest.engine.util.DockerCommunityDetectionRunner;
+import org.ndexbio.communitydetection.rest.model.CommunityDetectionAlgorithms;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequest;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionResultStatus;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionResult;
@@ -232,6 +233,11 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
         if (FileUtils.deleteQuietly(thisTaskDir) == false){
             _logger.error("There was a problem deleting the directory: " + thisTaskDir.getAbsolutePath());
         }
+    }
+
+    @Override
+    public CommunityDetectionAlgorithms getAlgorithms() throws CommunityDetectionException {
+        throw new UnsupportedOperationException("Not supported yet."); 
     }
 
     @Override

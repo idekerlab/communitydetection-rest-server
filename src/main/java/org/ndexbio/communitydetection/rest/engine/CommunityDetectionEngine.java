@@ -1,5 +1,6 @@
 package org.ndexbio.communitydetection.rest.engine;
 
+import org.ndexbio.communitydetection.rest.model.CommunityDetectionAlgorithms;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequest;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionResultStatus;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionResult;
@@ -44,6 +45,14 @@ public interface CommunityDetectionEngine extends Runnable {
      */
     public void delete(final String id) throws CommunityDetectionException;
  
+    
+    /**
+     * Gets community detection algorithms supported by this service
+     * @retun
+     * @throws CommunityDetectionException 
+     */
+    public CommunityDetectionAlgorithms getAlgorithms() throws CommunityDetectionException;
+    
     /**
      * Gets status of server
      * @return
