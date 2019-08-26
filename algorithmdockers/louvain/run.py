@@ -14,7 +14,7 @@ def _parse_arguments(desc, args):
     :param args:
     :return:
     """
-    help_fm = argparse.RawDescriptionHelpFormatter
+    help_fm = argparse.ArgumentDefaultsHelpFormatter
     parser = argparse.ArgumentParser(description=desc,
                                      formatter_class=help_fm)
     parser.add_argument('input',
