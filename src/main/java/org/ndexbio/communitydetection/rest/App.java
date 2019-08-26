@@ -130,7 +130,8 @@ public class App {
 		
 		
                 final int port = Integer.valueOf(props.getProperty(App.RUNSERVER_PORT, "8081"));
-                System.out.println("\nSpinning up server for status invoke: http://localhost:" + Integer.toString(port) + Configuration.APPLICATION_PATH + Configuration.V_ONE_PATH + "/status\n\n");
+                System.out.println("\nSpinning up server. For status visit: \nhttp://localhost:" + Integer.toString(port) + "/cd" + Configuration.APPLICATION_PATH + Configuration.V_ONE_PATH + "/status\n");
+                System.out.println("Swagger documentation: " + "http://localhost:" + Integer.toString(port) + "/cd\n");
                 System.out.flush();
                 
                 //We are creating a print stream based on our RolloverFileOutputStream
@@ -229,8 +230,8 @@ public class App {
         sb.append("# Sets port Jetty web service will be run under\n");
         sb.append(App.RUNSERVER_PORT + " = 8081\n\n");
         
-        sb.append("# Sets Jetty Context Path for Community Detection\n");
-        sb.append(App.RUNSERVER_CONTEXTPATH + " = /\n\n");
+        sb.append("# Sets Jetty Context Path for Community Detection (the endpoint assumes /cd so if apache doesnt redirect from there then add /cd here\n");
+        sb.append(App.RUNSERVER_CONTEXTPATH + " = /cd\n\n");
         
         sb.append("# Sets DoS Filter maxRequestsPerSec See: https://www.eclipse.org/jetty/documentation/current/dos-filter.html\n");
         sb.append(App.RUNSERVER_DOSFILTER_MAX_REQS + " = 1\n\n");
