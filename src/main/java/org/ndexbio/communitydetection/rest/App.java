@@ -14,7 +14,11 @@ import java.util.List;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import org.eclipse.jetty.server.ConnectionFactory;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.ForwardedRequestCustomizer;
 import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.util.RolloverFileOutputStream;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.server.Server;
@@ -177,6 +181,9 @@ public class App {
  
                 server.setHandler(contexts);
                 
+                addCustomizerToEnableDoSFilterToSeeIpAddresses(server);
+                
+                
                 server.start();
                 Log.getRootLogger().info("Embedded Jetty logging started.", new Object[]{});
 	    
@@ -191,6 +198,25 @@ public class App {
         }
 
     }
+    
+    /**
+     * This function finds the HttpConfiguration factory and adds in the
+     * ForwardedRequestCustomizer object which handles issue where putting
+     * this server behind a proxy one loses the requestor's ip address 
+     * cause the proxy sets the actual ip in X-Forwarded... header
+     * @param server 
+     */
+    public static void addCustomizerToEnableDoSFilterToSeeIpAddresses(Server server) {
+	ForwardedRequestCustomizer customizer = new ForwardedRequestCustomizer();
+	for (Connector connector : server.getConnectors()) {
+		for (ConnectionFactory connectionFactory : connector.getConnectionFactories()) {
+			if (connectionFactory instanceof HttpConfiguration.ConnectionFactory) {
+				((HttpConfiguration.ConnectionFactory) connectionFactory)
+						.getHttpConfiguration().addCustomizer(customizer);
+			}
+		}
+	}
+}
     
     public static Properties getPropertiesFromConf(final String path) throws IOException, FileNotFoundException {
         Properties props = new Properties();
