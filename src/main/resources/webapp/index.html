@@ -47,7 +47,8 @@
       }
       // Begin Swagger UI call region
       const ui = SwaggerUIBundle({
-        url: "communitydetection/openapi.json",
+          
+        url: window.location.protocol + "//" + window.location.host + window.location.pathname + "communitydetection/openapi.json",
         dom_id: '#swagger-ui',
         deepLinking: true,
         presets: [
