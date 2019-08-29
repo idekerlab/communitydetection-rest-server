@@ -25,6 +25,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.ndexbio.communitydetection.rest.engine.CommunityDetectionEngine;
+import org.ndexbio.communitydetection.rest.model.CommunityDetectionAlgorithms;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequest;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionResultStatus;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionResult;
@@ -370,6 +371,115 @@ public class TestCommunityDetection {
         } finally {
             _folder.delete();
             Configuration.getInstance().setCommunityDetectionEngine(null);
+        }
+    }
+    
+    @Test
+    public void testGetAlgorithmsWhereCommunityDetectionEngineNotLoaded() throws Exception {
+
+        try {
+            File tempDir = _folder.newFolder();
+            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
+            
+            FileWriter fw = new FileWriter(confFile);
+            
+            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
+            fw.flush();
+            fw.close();
+            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
+            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+
+            MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/algorithms");
+
+            MockHttpResponse response = new MockHttpResponse();
+            Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
+            Configuration.getInstance().setCommunityDetectionEngine(null);
+            dispatcher.invoke(request, response);
+            assertEquals(500, response.getStatus());
+            ObjectMapper mapper = new ObjectMapper();
+            ErrorResponse er = mapper.readValue(response.getOutput(),
+                    ErrorResponse.class);
+            assertEquals("Error trying to get list of algorithms", er.getMessage());
+            assertEquals("CommunityDetection Engine not loaded", er.getDescription());
+        } finally {
+            _folder.delete();
+        }
+    }
+    
+    @Test
+    public void testGetAlgorithmsWhereEngineReturnsNull() throws Exception {
+
+        try {
+            File tempDir = _folder.newFolder();
+            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
+            
+            FileWriter fw = new FileWriter(confFile);
+            
+            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
+            fw.flush();
+            fw.close();
+            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
+            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+
+            MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/algorithms");
+
+            MockHttpResponse response = new MockHttpResponse();
+            Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
+            
+            // create mock enrichment engine that returns null
+            CommunityDetectionEngine mockEngine = createMock(CommunityDetectionEngine.class);
+            expect(mockEngine.getAlgorithms()).andReturn(null);
+            replay(mockEngine);
+            Configuration.getInstance().setCommunityDetectionEngine(mockEngine);
+            
+            dispatcher.invoke(request, response);
+            assertEquals(410, response.getStatus());
+            verify(mockEngine);
+        } finally {
+            _folder.delete();
+            Configuration.getInstance().setCommunityDetectionEngine(null);
+
+        }
+    }
+    
+    @Test
+    public void testGetAlgorithmsSuccess() throws Exception {
+
+        try {
+            File tempDir = _folder.newFolder();
+            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
+            
+            FileWriter fw = new FileWriter(confFile);
+            
+            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
+            fw.flush();
+            fw.close();
+            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
+            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+
+            MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/algorithms");
+
+            MockHttpResponse response = new MockHttpResponse();
+            Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
+            
+            // create mock enrichment engine that returns null
+            CommunityDetectionEngine mockEngine = createMock(CommunityDetectionEngine.class);
+            CommunityDetectionAlgorithms cdalgos = new CommunityDetectionAlgorithms();
+            expect(mockEngine.getAlgorithms()).andReturn(cdalgos);
+            replay(mockEngine);
+            Configuration.getInstance().setCommunityDetectionEngine(mockEngine);
+            
+            dispatcher.invoke(request, response);
+            assertEquals(200, response.getStatus());
+            ObjectMapper mapper = new ObjectMapper();
+            CommunityDetectionAlgorithms res = mapper.readValue(response.getOutput(),
+                    CommunityDetectionAlgorithms.class);
+            assertEquals(null, res.getAlgorithms());
+            verify(mockEngine);
+        } finally {
+            _folder.delete();
+            Configuration.getInstance().setCommunityDetectionEngine(null);
+
         }
     }
     
