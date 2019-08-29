@@ -30,7 +30,7 @@ public class TestConfiguration {
             Configuration.setAlternateConfigurationFile(configFile.getAbsolutePath());
             try {
                 Configuration config = Configuration.reloadConfiguration();
-                fail("Expected EnrichmentException");
+                fail("Expected CommunityDetectionException");
             } catch(CommunityDetectionException ee){
                 assertTrue(ee.getMessage().contains("FileNotFound Exception"));
             }
@@ -80,6 +80,30 @@ public class TestConfiguration {
             Configuration config = Configuration.reloadConfiguration();
             assertEquals(taskDir.getAbsolutePath(), config.getTaskDirectory());
             assertNull(config.getCommunityDetectionEngine());
+        } finally {
+            _folder.delete();
+        }
+    }
+    
+    @Test
+    public void testParseAlgorithmMapInvalidData() throws CommunityDetectionException, IOException {
+        File tempDir = _folder.newFolder();
+        try {
+            File configFile = new File(tempDir.getAbsolutePath() + File.separator + "conf");
+            File taskDir = new File(tempDir.getAbsolutePath() + File.separator + "tasks");
+            Properties props = new Properties();
+            props.setProperty(Configuration.TASK_DIR, taskDir.getAbsolutePath());
+            props.setProperty(Configuration.ALGORITHM_MAP, "haha");
+            FileOutputStream fos = new FileOutputStream(configFile);
+            props.store(fos, "hello");
+            fos.flush();
+            fos.close();
+            Configuration.setAlternateConfigurationFile(configFile.getAbsolutePath());
+            Configuration config = Configuration.reloadConfiguration();
+            assertEquals(taskDir.getAbsolutePath(), config.getTaskDirectory());
+            assertNull(config.getCommunityDetectionEngine());
+            assertEquals(180, config.getAlgorithmTimeOut());
+            assertEquals(null, config.getAlgorithmToDockerMap());
         } finally {
             _folder.delete();
         }
