@@ -17,6 +17,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.io.FileUtils;
 import org.ndexbio.communitydetection.rest.engine.util.DockerCommunityDetectionRunner;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionAlgorithms;
@@ -48,6 +49,8 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
     private boolean _shutdown;
     private ExecutorService _executorService;
     private ConcurrentLinkedQueue<Future> _futureTaskQueue;
+    private AtomicInteger _completedTasks;
+    private AtomicInteger _queuedTasks;
     private HashMap<String, String> _algoToDockerMap;
     private String _dockerCmd;
         
@@ -69,6 +72,8 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
         _dockerCmd = dockerCmd;
         _algoToDockerMap = algoToDockerMap;
         _results = new ConcurrentHashMap<>();
+        _completedTasks = new AtomicInteger(0);
+        _queuedTasks = new AtomicInteger(0);
     }
     
     /**
@@ -96,13 +101,17 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
         while(_shutdown == false){
             Future f;
             Iterator<Future> itr = _futureTaskQueue.iterator();
+            int queuedCount = 0;
+            
             while(itr.hasNext()){
                 f = itr.next();
                 if (f.isCancelled() || f.isDone()){
+                    _logger.debug("Found a completed or failed task");
                     if (f.isDone()){
-                       CommunityDetectionResult cdr;
                         try {
-                            cdr = (CommunityDetectionResult) f.get();
+                            CommunityDetectionResult cdr = (CommunityDetectionResult) f.get();
+                            saveCommunityDetectionResultToFilesystem(cdr);
+                            _completedTasks.incrementAndGet();
                         } catch (InterruptedException ex) {
                             _logger.error("Got interrupted exception", ex);
                             continue;
@@ -113,11 +122,13 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
                             _logger.error("Got cancelation exception", ex);
                             continue;
                         }
-                        saveCommunityDetectionResultToFilesystem(cdr);
                     }
                     itr.remove();
+                } else {
+                    queuedCount++;
                 }
             }
+            _queuedTasks.set(queuedCount);
             threadSleep();
         }
         _logger.debug("Shutdown was invoked");
@@ -135,6 +146,7 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
 
     protected void saveCommunityDetectionResultToFilesystem(final CommunityDetectionResult cdr){
         if (cdr == null){
+            _logger.error("Received a null result, unable to save");
             return;
         }
         
@@ -253,6 +265,8 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
             sObj.setLoad(Arrays.asList(load, unknown, unknown));
             File taskDir = new File(this._taskDir);
             sObj.setPcDiskFull(100-(int)Math.round(((double)taskDir.getFreeSpace()/(double)taskDir.getTotalSpace())*100));
+            sObj.setQueuedTasks(_queuedTasks.get());
+            sObj.setCompletedTasks(_completedTasks.get());
             return sObj;
         } catch(Exception ex){
             _logger.error("ServerStatus error", ex);
