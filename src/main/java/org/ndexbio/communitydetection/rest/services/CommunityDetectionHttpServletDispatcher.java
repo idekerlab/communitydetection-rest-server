@@ -46,7 +46,7 @@ public class CommunityDetectionHttpServletDispatcher extends HttpServletDispatch
             _logger.debug("Starting CommunityDetection Engine thread");
             _communityDetectionEngineThread = new Thread(_communityDetectionEngine);
             _communityDetectionEngineThread.start();
-            _logger.debug("CommunityDetection Engine thread running id => " + Long.toString(_communityDetectionEngineThread.getId()));
+            _logger.info("CommunityDetection Engine thread running id => " + Long.toString(_communityDetectionEngineThread.getId()));
             Configuration.getInstance().setCommunityDetectionEngine(_communityDetectionEngine);
         }
         catch(CommunityDetectionException ex){
