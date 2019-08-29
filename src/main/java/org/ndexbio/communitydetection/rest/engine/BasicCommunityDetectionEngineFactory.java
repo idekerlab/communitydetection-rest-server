@@ -39,6 +39,7 @@ public class BasicCommunityDetectionEngineFactory {
      * @return 
      */
     public CommunityDetectionEngine getCommunityDetectionEngine() throws CommunityDetectionException {
+        _logger.debug("Creating executor service with: " + Integer.toString(_numWorkers) + " workers");
         ExecutorService es = Executors.newFixedThreadPool(_numWorkers);
         CommunityDetectionEngineImpl engine = new CommunityDetectionEngineImpl(es, _taskDir, _dockerCmd, _algoMap);
         return engine;
