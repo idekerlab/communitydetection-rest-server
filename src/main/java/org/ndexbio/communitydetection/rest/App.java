@@ -166,10 +166,10 @@ public class App {
                 webappContext.addFilter(CorsFilter.class,
                                         Configuration.APPLICATION_PATH + "/*", null);
                 webappContext.addFilter(FilterDispatcher.class, "/*", null);
-                FilterHolder dosFilterHolder = new FilterHolder(DoSFilter.class);
-                dosFilterHolder.setInitParameter("maxRequestsPerSec", props.getProperty(App.RUNSERVER_DOSFILTER_MAX_REQS, "2"));
-                dosFilterHolder.setInitParameter("delayMs", props.getProperty(App.RUNSERVER_DOSFILTER_DELAY, "200"));
-                webappContext.addFilter(dosFilterHolder, "/*",null);
+                //FilterHolder dosFilterHolder = new FilterHolder(DoSFilter.class);
+                //dosFilterHolder.setInitParameter("maxRequestsPerSec", props.getProperty(App.RUNSERVER_DOSFILTER_MAX_REQS, "2"));
+                //dosFilterHolder.setInitParameter("delayMs", props.getProperty(App.RUNSERVER_DOSFILTER_DELAY, "200"));
+                //webappContext.addFilter(dosFilterHolder, "/*",null);
                 
                 String resourceBasePath = App.class.getResource("/webapp").toExternalForm();
                 webappContext.setWelcomeFiles(new String[] { "index.html" });
@@ -181,15 +181,12 @@ public class App {
  
                 server.setHandler(contexts);
                 
-                addCustomizerToEnableDoSFilterToSeeIpAddresses(server);
+                //addCustomizerToEnableDoSFilterToSeeIpAddresses(server);
                 
                 
-                server.start();
-                Log.getRootLogger().info("Embedded Jetty logging started.", new Object[]{});
-	    
-                System.out.println("Server started on port " + port);
+                server.start();	    
+                System.out.println("Server started on: " + server.getURI().toString());
                 server.join();
-                return;
             }
             
         }
@@ -259,11 +256,11 @@ public class App {
         sb.append("# Sets Jetty Context Path for Community Detection (the endpoint assumes /cd so if apache doesnt redirect from there then add /cd here\n");
         sb.append(App.RUNSERVER_CONTEXTPATH + " = /cd\n\n");
         
-        sb.append("# Sets DoS Filter maxRequestsPerSec See: https://www.eclipse.org/jetty/documentation/current/dos-filter.html\n");
-        sb.append(App.RUNSERVER_DOSFILTER_MAX_REQS + " = 1\n\n");
+        //sb.append("# Sets DoS Filter maxRequestsPerSec See: https://www.eclipse.org/jetty/documentation/current/dos-filter.html\n");
+        //sb.append(App.RUNSERVER_DOSFILTER_MAX_REQS + " = 1\n\n");
         
-        sb.append("# Sets DoS Filter delayMs See: https://www.eclipse.org/jetty/documentation/current/dos-filter.html\n");
-        sb.append(App.RUNSERVER_DOSFILTER_DELAY + " = 200\n\n");
+        //sb.append("# Sets DoS Filter delayMs See: https://www.eclipse.org/jetty/documentation/current/dos-filter.html\n");
+        //sb.append(App.RUNSERVER_DOSFILTER_DELAY + " = 200\n\n");
         
         sb.append("# Valid log levels DEBUG INFO WARN ERROR ALL\n");
         sb.append(App.RUNSERVER_LOGLEVEL + " = INFO\n");
