@@ -19,21 +19,43 @@ public class CommandLineRunnerImpl implements CommandLineRunner {
     private Map<String, String> _environVars;
     private String _lastCommand;
     
+    /**
+     * Sets the working directory for the process
+     * @param workingDir 
+     */
     @Override
     public void setWorkingDirectory(final String workingDir) {
         _workingDirectory = workingDir;
     }
 
+    /**
+     * Sets environment variables for process
+     * @param envVars 
+     */
     @Override
     public void setEnvironmentVariables(Map<String, String> envVars) {
         _environVars = envVars;
     }
 
+    /**
+     * Gets the last command as a space delimited string
+     * @return Last command as string or null if no commands have been run
+     */
     @Override
     public String getLastCommand() {
         return _lastCommand;
     }
     
+    /**
+     * Runs command line process
+     * @param timeOut timeout value
+     * @param unit unit for timeout value
+     * @param stdOutFile File to write any standard output
+     * @param stdErrFile File to write any standard
+     * @param command command with arguments to run
+     * @return exit code of process (if timeout exceeded, 500 is returned)
+     * @throws Exception 
+     */
     @Override
     public int runCommandLineProcess(long timeOut, TimeUnit unit,
             File stdOutFile, File stdErrFile, String... command) throws Exception {        
