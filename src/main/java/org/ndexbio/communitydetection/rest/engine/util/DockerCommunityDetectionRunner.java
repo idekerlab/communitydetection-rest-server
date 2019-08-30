@@ -25,7 +25,7 @@ public class DockerCommunityDetectionRunner implements Callable {
     
     static Logger _logger = LoggerFactory.getLogger(DockerCommunityDetectionRunner.class);
 
-    public static final String INPUTEDGE_FILE = "edgelist.txt";
+    public static final String INPUT_FILE = "input.txt";
     public static final String STD_OUT_FILE = "stdout.txt";
     public static final String STD_ERR_FILE = "stderr.txt";
     public static final String CMD_RUN_FILE = "cmdrun.sh";
@@ -34,6 +34,7 @@ public class DockerCommunityDetectionRunner implements Callable {
     private CommunityDetectionRequest _cdr;
     private String _dockerCmd;
     private String _dockerImage;
+    private String _taskDir;
     private String _workDir;
     private long _startTime;
     private long _timeOut;
@@ -50,10 +51,11 @@ public class DockerCommunityDetectionRunner implements Callable {
         _dockerCmd = dockerCmd;
         _dockerImage = dockerImage;
         _startTime = startTime;
-        _workDir = taskDir + File.separator + _id;
+        _taskDir = taskDir;
+        _workDir = _taskDir + File.separator + _id;
         _timeOut = timeOut;
         _timeUnit = unit;
-        writeEdgeListFile();
+        writeInputFile();
        
         _runner = new CommandLineRunnerImpl();
         
@@ -63,7 +65,7 @@ public class DockerCommunityDetectionRunner implements Callable {
         _runner = clr;
     }
     
-    protected String writeEdgeListFile() throws Exception{
+    protected String writeInputFile() throws Exception{
         File workDir = new File(_workDir);
         
         if (workDir.isDirectory() == false){
@@ -71,7 +73,7 @@ public class DockerCommunityDetectionRunner implements Callable {
                 throw new Exception("Unable to create directory: " + _workDir);
             }
         }
-        File destFile = new File(_workDir + File.separator + INPUTEDGE_FILE);
+        File destFile = new File(_workDir + File.separator + INPUT_FILE);
         if (_cdr.getData()instanceof TextNode){
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(destFile))){
                 bw.write(_cdr.getData().asText());
@@ -161,7 +163,7 @@ public class DockerCommunityDetectionRunner implements Callable {
         String mapDir = _workDir + ":" + _workDir + ":ro";
         _runner.setWorkingDirectory(_workDir);
         
-        String inputFile = writeEdgeListFile();
+        String inputFile = writeInputFile();
         
         File stdOutFile = getStandardOutFile();
         File stdErrFile = getStandardErrorFile();
