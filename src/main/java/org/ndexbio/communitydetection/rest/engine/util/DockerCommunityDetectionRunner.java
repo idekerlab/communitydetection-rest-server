@@ -51,7 +51,7 @@ public class DockerCommunityDetectionRunner implements Callable {
      * @param taskDir Base directory for tasks (this task will be put into taskDir/id)
      * @param dockerCmd Command to run docker (/usr/bin/docker /bin/docker etc..)
      * @param dockerImage Docker image to run (hello-world)
-     * @param timeOut Any task exceedingthis time (in unit set by unit) will be killed
+     * @param timeOut Any task exceeding this time (in unit set by unit) will be killed
      * @param unit Unit to use for timeout
      * @throws Exception If there is an issue writing the input data from the cdr object
      */
