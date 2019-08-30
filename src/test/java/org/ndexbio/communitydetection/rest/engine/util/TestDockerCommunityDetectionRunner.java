@@ -1,6 +1,5 @@
 package org.ndexbio.communitydetection.rest.engine.util;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.TextNode;
 import java.io.BufferedReader;
@@ -12,6 +11,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequest;
+import org.ndexbio.communitydetection.rest.model.CommunityDetectionResult;
 import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionException;
 /**
  *
@@ -42,7 +42,7 @@ public class TestDockerCommunityDetectionRunner {
     }
     
     @Test
-    public void testConstructorSuccessfulTextData() throws Exception {
+    public void testConstructorSuccessfulTextDataAndTestAFewOtherThings() throws Exception {
         File tempDir = _folder.newFolder();
         try {
             
@@ -50,12 +50,31 @@ public class TestDockerCommunityDetectionRunner {
             cdr.setAlgorithm("somealgo");
             cdr.setData(new TextNode("blah"));
             DockerCommunityDetectionRunner runner = new DockerCommunityDetectionRunner("someid", cdr,
-                    0, tempDir.getAbsolutePath(), "docker", "hello-world", 1,
+                    3, tempDir.getAbsolutePath(), "docker", "hello-world", 1,
                     TimeUnit.SECONDS);
             
             try (BufferedReader br = new BufferedReader(new FileReader(runner.getInputFile()))){
                 assertEquals("blah", br.readLine());
             }
+            
+            // check some of the basic get methods do the right thing
+            assertEquals(tempDir.getAbsolutePath() + File.separator + "someid" + 
+                    File.separator + DockerCommunityDetectionRunner.CMD_RUN_FILE, 
+                    runner.getCommandRunFile().getAbsolutePath());
+            assertEquals(tempDir.getAbsolutePath() + File.separator + "someid" + 
+                    File.separator + DockerCommunityDetectionRunner.INPUT_FILE, 
+                    runner.getInputFile().getAbsolutePath());
+            assertEquals(tempDir.getAbsolutePath() + File.separator + "someid" + 
+                    File.separator + DockerCommunityDetectionRunner.STD_OUT_FILE, 
+                    runner.getStandardOutFile().getAbsolutePath());
+            assertEquals(tempDir.getAbsolutePath() + File.separator + "someid" + 
+                    File.separator + DockerCommunityDetectionRunner.STD_ERR_FILE, 
+                    runner.getStandardErrorFile().getAbsolutePath());
+            
+            CommunityDetectionResult cdRes = runner.createCommunityDetectionResult();
+            assertEquals(3, cdRes.getStartTime());
+            assertEquals(0, cdRes.getProgress());
+            assertEquals(CommunityDetectionResult.PROCESSING_STATUS, cdRes.getStatus());
         }finally {
             _folder.delete();
         } 
