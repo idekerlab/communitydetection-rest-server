@@ -13,6 +13,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequest;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionResult;
+import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,15 +66,15 @@ public class DockerCommunityDetectionRunner implements Callable {
         _runner = clr;
     }
     
-    protected String writeInputFile() throws Exception{
+    protected String writeInputFile() throws CommunityDetectionException, IOException {
         File workDir = new File(_workDir);
         
         if (workDir.isDirectory() == false){
             if (workDir.mkdirs() == false){
-                throw new Exception("Unable to create directory: " + _workDir);
+                throw new CommunityDetectionException("Unable to create directory: " + _workDir);
             }
         }
-        File destFile = new File(_workDir + File.separator + INPUT_FILE);
+        File destFile = getInputFile();
         if (_cdr.getData()instanceof TextNode){
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(destFile))){
                 bw.write(_cdr.getData().asText());
@@ -94,6 +95,10 @@ public class DockerCommunityDetectionRunner implements Callable {
         return new File(_workDir + File.separator + STD_ERR_FILE);
     }
     
+    protected File getInputFile(){
+        return new File(_workDir + File.separator + INPUT_FILE);
+    }
+
     protected File getCommandRunFile(){
         return new File(_workDir + File.separator + CMD_RUN_FILE);
     }
