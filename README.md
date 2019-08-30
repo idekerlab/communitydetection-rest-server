@@ -83,8 +83,11 @@ communitydetection.number.workers = 1
 # Docker command to run
 communitydetection.docker.cmd = docker
 
+# Algorithm/ docker command timeout in seconds. Anything taking longer will be killed
+communitydetection.algorithm.timeout = 180
+
 # Json fragment that is a mapping of algorithm names to docker images
-communitydetection.algorithm.map = {"louvain": "coleslawndex/testlouvain"}
+communitydetection.algorithm.map = {"infomap": "coleslawndex/infomap"}
 
 # Sets HOST URL prefix (value is prefixed to Location header when query is invoked. Can be commented out)
 # communitydetection.host.url = http://ndexbio.org
@@ -94,8 +97,8 @@ runserver.log.dir = /tmp/logs
 # Sets port Jetty web service will be run under
 runserver.port = 8081
 
-# sets Jetty Context Path for Community Detection
-runserver.contextpath = /
+# Sets Jetty Context Path for Community Detection (the endpoint assumes /cd so if apache doesnt redirect from there then add /cd here
+runserver.contextpath = /cd
 
 # Valid log levels DEBUG INFO WARN ERROR ALL
 runserver.log.level = INFO
