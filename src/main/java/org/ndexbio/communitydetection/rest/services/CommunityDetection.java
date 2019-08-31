@@ -127,9 +127,7 @@ public class CommunityDetection {
                                 content = @Content(mediaType = MediaType.APPLICATION_JSON,
                                 schema = @Schema(implementation = ErrorResponse.class)))
                })
-    public Response getResult(@PathParam("id") final String id,
-            @Parameter(description = "Starting index of result, should be an integer 0 or larger") @QueryParam("start") int start,
-            @Parameter(description = "Number of results to return, 0 for all") @QueryParam("size") int size) {
+    public Response getResult(@PathParam("id") final String id) {
         ObjectMapper omappy = new ObjectMapper();
 
         try {
