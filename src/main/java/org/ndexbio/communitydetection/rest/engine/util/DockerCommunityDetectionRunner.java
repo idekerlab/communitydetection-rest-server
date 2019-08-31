@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequest;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionResult;
 import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionException;
+import org.ndexbio.communitydetection.rest.services.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -215,8 +216,12 @@ public class DockerCommunityDetectionRunner implements Callable {
         File outFile = stdOutFile;
         if (exitValue != 0){
                 cdr.setStatus(CommunityDetectionResult.FAILED_STATUS);
-                cdr.setMessage("Received non zero exit code: " +
-                        Integer.toString(exitValue) + " when running algorithm for task: " + cdr.getId());
+                if (exitValue == 500){
+                    cdr.setMessage("Runtime limit exceeded");
+                } else {
+                    cdr.setMessage("Received non zero exit code: " +
+                            Integer.toString(exitValue) + " when running algorithm for task: " + cdr.getId());
+                }
                 outFile = stdErrFile;
                 _logger.error(cdr.getMessage());
         } else {
