@@ -12,7 +12,6 @@ import java.util.Iterator;
 import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -39,7 +38,7 @@ import org.slf4j.LoggerFactory;
  */
 public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
 
-    public static final String CDREQEUST_JSON_FILE = "cdrequest.json";
+    public static final String CDREQUEST_JSON_FILE = "cdrequest.json";
     
     public static final String CDRESULT_JSON_FILE = "cdresult.json";
     
@@ -48,9 +47,10 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
     private String _taskDir;
     private boolean _shutdown;
     private ExecutorService _executorService;
-    private ConcurrentLinkedQueue<Future> _futureTaskQueue;
+    private ConcurrentHashMap<String, Future> _futureTaskMap;
     private AtomicInteger _completedTasks;
     private AtomicInteger _queuedTasks;
+    private AtomicInteger _canceledTasks;
     private HashMap<String, String> _algoToDockerMap;
     private String _dockerCmd;
         
@@ -67,13 +67,14 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
             final HashMap<String, String> algoToDockerMap){
         _executorService = es;
         _shutdown = false;
-        _futureTaskQueue = new ConcurrentLinkedQueue<>();
+        _futureTaskMap = new ConcurrentHashMap<>();
         _taskDir = taskDir;
         _dockerCmd = dockerCmd;
         _algoToDockerMap = algoToDockerMap;
         _results = new ConcurrentHashMap<>();
         _completedTasks = new AtomicInteger(0);
         _queuedTasks = new AtomicInteger(0);
+        _canceledTasks = new AtomicInteger(0);
     }
     
     /**
@@ -100,38 +101,44 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
     public void run() {
         while(_shutdown == false){
             Future f;
-            Iterator<Future> itr = _futureTaskQueue.iterator();
+            String taskId;
             int queuedCount = 0;
-            
-            while(itr.hasNext()){
-                f = itr.next();
-                if (f.isCancelled() || f.isDone()){
+            Iterator<String> idItr = _futureTaskMap.keySet().iterator();
+            while(idItr.hasNext()){
+                taskId = idItr.next();
+                
+                f = _futureTaskMap.get(taskId);
+                if (f == null){
+                    continue;
+                }
+                if (f.isCancelled()){
+                    _futureTaskMap.remove(taskId);
+                    _canceledTasks.incrementAndGet();
+                } else if (f.isDone()){
                     _logger.debug("Found a completed or failed task");
-                    if (f.isDone()){
-                        try {
-                            CommunityDetectionResult cdr = (CommunityDetectionResult) f.get();
-                            saveCommunityDetectionResultToFilesystem(cdr);
-                            _completedTasks.incrementAndGet();
-                        } catch (InterruptedException ex) {
-                            _logger.error("Got interrupted exception", ex);
-                            continue;
-                        } catch (ExecutionException ex) {
-                            _logger.error("Got execution exception", ex);
-                            continue;
-                        } catch (CancellationException ex){
-                            _logger.error("Got cancelation exception", ex);
-                            continue;
-                        }
+                    try {
+                        CommunityDetectionResult cdr = (CommunityDetectionResult) f.get();
+                        saveCommunityDetectionResultToFilesystem(cdr);
+                        _completedTasks.incrementAndGet();
+                    } catch (InterruptedException ex) {
+                        _logger.error("Got interrupted exception", ex);
+                    } catch (ExecutionException ex) {
+                        _logger.error("Got execution exception", ex);
+                    } catch (CancellationException ex){
+                        _logger.error("Got cancellation exception", ex);
                     }
-                    itr.remove();
+                    _futureTaskMap.remove(taskId);
                 } else {
                     queuedCount++;
                 }
             }
-            _queuedTasks.set(queuedCount);
+            if (_queuedTasks.get() != queuedCount){
+                _queuedTasks.set(queuedCount);
+            }
             threadSleep();
         }
         _logger.debug("Shutdown was invoked");
+        logServerStatus(null);
     }
 
     @Override
@@ -139,6 +146,25 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
         _shutdown = true;
     }
     
+    /**
+     * Calls {@link #getServerStatus() } and dumps the status of the server as
+     * a JSON string to the info level of the logger for this class
+     */
+    protected void logServerStatus(final ServerStatus ss){
+        try {
+            final ServerStatus sStat;
+            if (ss != null){
+                sStat = ss;
+            } else {
+                sStat = this.getServerStatus();
+            }
+           
+           ObjectMapper mapper = new ObjectMapper();
+           _logger.info("ServerStatus: " + mapper.writeValueAsString(sStat));
+        }catch(Exception ex){
+            _logger.error("error trying to log server status", ex);
+        }
+    }
     
     protected String getCommunityDetectionResultFilePath(final String id){
         return this._taskDir + File.separator + id + File.separator + CommunityDetectionEngineImpl.CDRESULT_JSON_FILE;
@@ -161,22 +187,18 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
     }
     
     protected CommunityDetectionResult getCommunityDetectionResultFromDbOrFilesystem(final String id){
-        CommunityDetectionResult cdr = _results.get(id);
-        if (cdr != null){
-            return cdr;
-        }
         ObjectMapper mappy = new ObjectMapper();
         File cdrFile = new File(getCommunityDetectionResultFilePath(id));
         if (cdrFile.isFile() == false){
             _logger.error(cdrFile.getAbsolutePath() + " is not a file");
-            return null;
+            return _results.get(id);
         }
         try {
             return mappy.readValue(cdrFile, CommunityDetectionResult.class);
         }catch(IOException io){
             _logger.error("Caught exception trying to load " + cdrFile.getAbsolutePath(), io);
         }
-        return null;
+        return _results.get(id);
     }
     
     @Override
@@ -206,7 +228,7 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
             DockerCommunityDetectionRunner task = new DockerCommunityDetectionRunner(id, request, cdr.getStartTime(),
             _taskDir, _dockerCmd, dockerImage, Configuration.getInstance().getAlgorithmTimeOut(),
             TimeUnit.SECONDS);
-            _futureTaskQueue.add(_executorService.submit(task));
+            _futureTaskMap.put(id, _executorService.submit(task));
             return id;
         } catch(Exception ex){
             throw new CommunityDetectionException(ex.getMessage());
@@ -236,6 +258,11 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
         _logger.debug("Deleting task " + id);
         if (_results.containsKey(id) == true){
             _results.remove(id);
+        }
+        Future f = _futureTaskMap.get(id);
+        if (f != null){
+            _logger.info("Canceling task: " + id + " result of cancel(): " +
+                    Boolean.toString(f.cancel(true)));
         }
         File thisTaskDir = new File(this._taskDir + File.separator + id);
         if (thisTaskDir.exists() == false){
@@ -267,6 +294,8 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
             sObj.setPcDiskFull(100-(int)Math.round(((double)taskDir.getFreeSpace()/(double)taskDir.getTotalSpace())*100));
             sObj.setQueuedTasks(_queuedTasks.get());
             sObj.setCompletedTasks(_completedTasks.get());
+            sObj.setCanceledTasks(_canceledTasks.get());
+            logServerStatus(sObj);
             return sObj;
         } catch(Exception ex){
             _logger.error("ServerStatus error", ex);
