@@ -41,7 +41,7 @@ import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionEx
     @Info(title = "Community Detection REST service",
           version = "0.5.0",
           description = "This service lets caller invoke various community detection clustering "
-                  + "algorithms which have been packaged into Docker images. To see what"
+                  + "algorithms which have been packaged into Docker images. To see what "
                   + "algorithms are supported visit the 'algorithms' endpoint below.\n\n "
                   + "<b>NOTE:</b> This service is experimental. The interface is subject to change.\n" +
 "")
