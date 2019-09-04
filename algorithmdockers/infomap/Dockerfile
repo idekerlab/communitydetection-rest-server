@@ -1,4 +1,4 @@
-FROM coleslawndex/infomap
+FROM coleslawndex/infomap0.20.0
 
 RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-4.6.14-Linux-x86_64.sh -O ~/miniconda.sh && \
     /bin/bash ~/miniconda.sh -b -p /opt/conda && \
