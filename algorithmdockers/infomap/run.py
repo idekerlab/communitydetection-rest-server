@@ -21,8 +21,12 @@ def _parse_arguments(desc, args):
                         help='Edge file in tab delimited format')
     parser.add_argument('--directed', action='store_true',
                         help='If set, then generate directed graph')
-    parser.add_argument('--disableoverlapping', action='store_true',
+    parser.add_argument('--enableoverlapping', action='store_true',
                         help='If set, disable infomap overlapping')
+    parser.add_argument('--outdir', default='/tmp',
+                        help='Sets directory where Infomap writes output')
+    parser.add_argument('--markovtime', default=0.5, type=float,
+                        help='Sets markov-time')
     return parser.parse_args(args)
 
 
@@ -35,6 +39,7 @@ def run_infomap_cmd(args):
     """
     cmd = ['/home/rstudio/Infomap']
     cmd.extend(args)
+
     p = subprocess.Popen(cmd,
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
@@ -72,8 +77,8 @@ def get_truncated_file(inputfile):
     return inputfilename[0:period_index]
 
 
-def run_infomap(graph,
-                overlap=True, directed=False):
+def run_infomap(graph, outdir, markovtime=0.5,
+                overlap=False, directed=False):
 
     """
     :outdir: the output directory to comprehend the output link file
@@ -82,8 +87,8 @@ def run_infomap(graph,
     :param directed
     :return
     """
-    cmdargs = ['-i', 'link-list']
-    outdir = '/tmp'
+    cmdargs = ['-i', 'link-list', '--inner-parallelization',
+               '--markov-time', str(markovtime)]
     if check_if_file_contains_zero(graph) is True:
         cmdargs.append('-z')
     if overlap is True:
@@ -158,7 +163,7 @@ def run_infomap(graph,
         edges.add((last, int(A[i, A.shape[1] - 1]), 'c-m'))
 
     for edge in edges:
-        sys.stdout.write(str(edge[0]) + ',' + str(edge[1]) + ',' + edge[2] + ';')
+        sys.stdout.write(str(edge[0]) + ',' + str(edge[1]) + ',' + str(edge[2]) + ';')
     sys.stdout.flush()
 
     return 0
@@ -181,13 +186,17 @@ def main(args):
 
     try:
         inputfile = os.path.abspath(theargs.input)
+        outdir = os.path.abspath(theargs.outdir)
 
         if theargs.directed is True:
             dval = True
         else:
             dval = False
 
-        return run_infomap(inputfile, overlap=not theargs.disableoverlapping, directed=dval)
+        return run_infomap(inputfile, outdir,
+                           markovtime=theargs.markovtime,
+                           overlap=theargs.enableoverlapping,
+                           directed=dval)
     except Exception as e:
         sys.stderr.write('Caught exception: ' + str(e))
         return 2
