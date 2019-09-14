@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.UUID;
 import java.util.concurrent.CancellationException;
@@ -18,12 +17,16 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.io.FileUtils;
+import org.ndexbio.communitydetection.rest.engine.util.CommunityDetectionRequestValidator;
 import org.ndexbio.communitydetection.rest.engine.util.DockerCommunityDetectionRunner;
+import org.ndexbio.communitydetection.rest.model.CommunityDetectionAlgorithm;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionAlgorithms;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequest;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionResultStatus;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionResult;
+import org.ndexbio.communitydetection.rest.model.ErrorResponse;
 import org.ndexbio.communitydetection.rest.model.ServerStatus;
+import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionBadRequestException;
 import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionException;
 
 import org.ndexbio.communitydetection.rest.services.CommunityDetectionHttpServletDispatcher;
@@ -51,7 +54,8 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
     private AtomicInteger _completedTasks;
     private AtomicInteger _queuedTasks;
     private AtomicInteger _canceledTasks;
-    private HashMap<String, String> _algoToDockerMap;
+    private CommunityDetectionAlgorithms _algorithms;
+    private CommunityDetectionRequestValidator _validator;
     private String _dockerCmd;
         
     /**
@@ -64,13 +68,15 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
     public CommunityDetectionEngineImpl(ExecutorService es,
             final String taskDir,
             final String dockerCmd,
-            final HashMap<String, String> algoToDockerMap){
+            final CommunityDetectionAlgorithms algorithms,
+            final CommunityDetectionRequestValidator validator){
         _executorService = es;
         _shutdown = false;
         _futureTaskMap = new ConcurrentHashMap<>();
         _taskDir = taskDir;
         _dockerCmd = dockerCmd;
-        _algoToDockerMap = algoToDockerMap;
+        _algorithms = algorithms;
+        _validator = validator;
         _results = new ConcurrentHashMap<>();
         _completedTasks = new AtomicInteger(0);
         _queuedTasks = new AtomicInteger(0);
@@ -201,17 +207,35 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
         return _results.get(id);
     }
     
+    /**
+     * Request a Community Detection algorithm be run. This is the call that
+     * should be coming from the rest POST endpoint
+     * @param request The request
+     * @return UUID as string
+     * @throws CommunityDetectionBadRequestException if request is invalid
+     * @throws CommunityDetectionException If there is a server side error
+     */
     @Override
-    public String request(CommunityDetectionRequest request) throws CommunityDetectionException {
+    public String request(CommunityDetectionRequest request) throws CommunityDetectionException,
+            CommunityDetectionBadRequestException {
         if (request == null){ 
-            throw new CommunityDetectionException("Request is null");
+            throw new CommunityDetectionBadRequestException("Request is null");
         }
         if (request.getAlgorithm() == null){
-            throw new CommunityDetectionException("No algorithm specified");
+            throw new CommunityDetectionBadRequestException("No algorithm specified");
         }
-        if (request.getData()== null){
-            throw new CommunityDetectionException("data is null");
+        
+        if (_algorithms.getAlgorithms().containsKey(request.getAlgorithm()) == false){
+            throw new CommunityDetectionBadRequestException(request.getAlgorithm() 
+                    + " is not a valid algorithm");
         }
+        
+        CommunityDetectionAlgorithm cda = _algorithms.getAlgorithms().get(request.getAlgorithm());
+        ErrorResponse er = this._validator.validateRequest(cda, request);
+        if (er != null){
+            throw new CommunityDetectionBadRequestException("Bad request", er);
+        }
+        
         String id = UUID.randomUUID().toString();
 
         CommunityDetectionResult cdr = new CommunityDetectionResult(System.currentTimeMillis());
@@ -219,14 +243,11 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
         cdr.setId(id);
         _results.put(id, cdr);
         
-        if (_algoToDockerMap.containsKey(request.getAlgorithm()) == false){
-            throw new CommunityDetectionException(request.getAlgorithm() + " is not a valid algorithm");
-        }
-        
-        String dockerImage = _algoToDockerMap.get(request.getAlgorithm());
+        String dockerImage = cda.getDockerImage();
         try {
             DockerCommunityDetectionRunner task = new DockerCommunityDetectionRunner(id, request, cdr.getStartTime(),
-            _taskDir, _dockerCmd, dockerImage, Configuration.getInstance().getAlgorithmTimeOut(),
+            _taskDir, _dockerCmd, dockerImage, request.getCustomParameters(),
+                    Configuration.getInstance().getAlgorithmTimeOut(),
             TimeUnit.SECONDS);
             _futureTaskMap.put(id, _executorService.submit(task));
             return id;
@@ -276,7 +297,10 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
 
     @Override
     public CommunityDetectionAlgorithms getAlgorithms() throws CommunityDetectionException {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        if (_algorithms == null){
+            throw new CommunityDetectionException("No algorithms found");
+        }
+        return _algorithms;
     }
 
     @Override

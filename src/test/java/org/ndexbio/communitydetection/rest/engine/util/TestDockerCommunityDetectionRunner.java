@@ -30,7 +30,7 @@ public class TestDockerCommunityDetectionRunner {
             assertTrue(taskDir.createNewFile());
             
             DockerCommunityDetectionRunner runner = new DockerCommunityDetectionRunner("someid", new CommunityDetectionRequest(),
-                    0, taskDir.getAbsolutePath(), "docker", "hello-world", 1,
+                    0, taskDir.getAbsolutePath(), "docker", "hello-world", null, 1,
                     TimeUnit.SECONDS);
             fail("Expected Exception");
             
@@ -50,7 +50,7 @@ public class TestDockerCommunityDetectionRunner {
             cdr.setAlgorithm("somealgo");
             cdr.setData(new TextNode("blah"));
             DockerCommunityDetectionRunner runner = new DockerCommunityDetectionRunner("someid", cdr,
-                    3, tempDir.getAbsolutePath(), "docker", "hello-world", 1,
+                    3, tempDir.getAbsolutePath(), "docker", "hello-world", null, 1,
                     TimeUnit.SECONDS);
             
             try (BufferedReader br = new BufferedReader(new FileReader(runner.getInputFile()))){
@@ -90,7 +90,7 @@ public class TestDockerCommunityDetectionRunner {
             ObjectMapper mapper = new ObjectMapper();
             cdr.setData(mapper.readTree("{\"blah\": \"data\"}"));
             DockerCommunityDetectionRunner runner = new DockerCommunityDetectionRunner("someid", cdr,
-                    0, tempDir.getAbsolutePath(), "docker", "hello-world", 1,
+                    0, tempDir.getAbsolutePath(), "docker", "hello-world", null, 1,
                     TimeUnit.SECONDS);
             
             try (BufferedReader br = new BufferedReader(new FileReader(runner.getInputFile()))){

@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequest;
@@ -36,6 +38,7 @@ public class DockerCommunityDetectionRunner implements Callable {
     private CommunityDetectionRequest _cdr;
     private String _dockerCmd;
     private String _dockerImage;
+    private Map<String, String> _customParameters;
     private String _taskDir;
     private String _workDir;
     private long _startTime;
@@ -58,12 +61,15 @@ public class DockerCommunityDetectionRunner implements Callable {
      */
     public DockerCommunityDetectionRunner(final String id,
             final CommunityDetectionRequest cdr, final long startTime, final String taskDir,
-            final String dockerCmd, final String dockerImage, final long timeOut,
+            final String dockerCmd, final String dockerImage,
+            final Map<String, String> customParameters,
+            final long timeOut,
             final TimeUnit unit) throws Exception{
         _id = id;
         _cdr = cdr;
         _dockerCmd = dockerCmd;
         _dockerImage = dockerImage;
+        _customParameters = customParameters;
         _startTime = startTime;
         _taskDir = taskDir;
         _workDir = _taskDir + File.separator + _id;
@@ -270,8 +276,25 @@ public class DockerCommunityDetectionRunner implements Callable {
             if (workDir.isDirectory() == false){
                 throw new Exception(_workDir + " directory does not exist");
             }
-            int  exitValue = _runner.runCommandLineProcess(_timeOut, _timeUnit, stdOutFile, stdErrFile, _dockerCmd, "run", "-v", mapDir,
-                                                         _dockerImage, inputFile);
+            ArrayList<String> mCmd = new ArrayList<String>();
+            mCmd.add(_dockerCmd);
+            mCmd.add("run");
+            mCmd.add("-v");
+            mCmd.add(mapDir);
+            mCmd.add(_dockerImage);
+            if (this._customParameters != null){
+                for (String key : _customParameters.keySet()){
+                    mCmd.add(key);
+                    
+                    String val = _customParameters.get(key);
+                    if (val != null && val.trim().isEmpty() == false){
+                        mCmd.add(val);
+                    }
+                }
+            }
+            mCmd.add(inputFile);
+            int  exitValue = _runner.runCommandLineProcess(_timeOut, _timeUnit,
+                    stdOutFile, stdErrFile, mCmd.toArray(new String[0]));
             writeCommandRunToFile();
             updateCommunityDetectionResult(exitValue, stdOutFile, stdErrFile, cdr);
             

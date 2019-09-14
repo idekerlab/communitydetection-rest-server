@@ -57,8 +57,7 @@ public class TestConfiguration {
             assertEquals(1, config.getNumberWorkers());
             assertEquals("docker", config.getDockerCommand());
             
-            assertEquals(1, config.getAlgorithmToDockerMap().size());
-            assertEquals("coleslawndex/infomap", config.getAlgorithmToDockerMap().get("infomap"));
+            assertEquals(null, config.getAlgorithms());
         } finally {
             _folder.delete();
         }
@@ -103,7 +102,7 @@ public class TestConfiguration {
             assertEquals(taskDir.getAbsolutePath(), config.getTaskDirectory());
             assertNull(config.getCommunityDetectionEngine());
             assertEquals(180, config.getAlgorithmTimeOut());
-            assertEquals(null, config.getAlgorithmToDockerMap());
+            assertEquals(null, config.getAlgorithms());
         } finally {
             _folder.delete();
         }
