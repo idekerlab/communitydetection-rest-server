@@ -2,6 +2,7 @@ package org.ndexbio.communitydetection.rest;
 
 
 import ch.qos.logback.classic.Level;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Properties;
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -20,15 +22,15 @@ import org.eclipse.jetty.server.ForwardedRequestCustomizer;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.util.RolloverFileOutputStream;
-import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.servlet.DefaultServlet;
-import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.servlets.DoSFilter;
 import org.jboss.resteasy.plugins.server.servlet.FilterDispatcher;
+import org.ndexbio.communitydetection.rest.model.CommunityDetectionAlgorithm;
+import org.ndexbio.communitydetection.rest.model.CommunityDetectionAlgorithms;
+import org.ndexbio.communitydetection.rest.model.CustomParameter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +50,11 @@ public class App {
 
     public static final String DESCRIPTION = "\nNDEx Community Detection REST service\n\n"
             + "For usage information visit:  https://github.com/ndexbio/communitydetection-rest-server\n\n";
+    
+    /**
+     * Default name for community detection algorithms json file
+     */
+    public static final String CD_ALGORITHMS_FILE = "communitydetectionalgorithms.json";
     
     /**
      * Sets logging level valid values DEBUG INFO WARN ALL ERROR
@@ -76,9 +83,11 @@ public class App {
     public static final String MODE = "mode";
     public static final String CONF = "conf";    
     public static final String EXAMPLE_CONF_MODE = "exampleconf";
+    public static final String EXAMPLE_ALGO_MODE = "examplealgo";
     public static final String RUNSERVER_MODE = "runserver";
     
-    public static final String SUPPORTED_MODES = EXAMPLE_CONF_MODE +
+    public static final String SUPPORTED_MODES = EXAMPLE_CONF_MODE + ", " +
+                                                 EXAMPLE_ALGO_MODE +
                                                     ", " + RUNSERVER_MODE;
     
     public static void main(String[] args){
@@ -118,6 +127,12 @@ public class App {
 
             if (mode.equals(EXAMPLE_CONF_MODE)){
                 System.out.println(generateExampleConfiguration());
+                System.out.flush();
+                return;
+            }
+            
+            if (mode.equals(EXAMPLE_ALGO_MODE)){
+                System.out.println(generateExampleCommunityDetectionAlgorithms());
                 System.out.flush();
                 return;
             }
@@ -187,8 +202,12 @@ public class App {
                 server.start();	    
                 System.out.println("Server started on: " + server.getURI().toString());
                 server.join();
+                return;
             }
-            
+            System.err.println("Invalid --mode: " + mode + " mode must be one of the "
+                    + "following: " + SUPPORTED_MODES);
+            System.exit(3);
+      
         }
         catch(Exception ex){
             ex.printStackTrace();
@@ -220,6 +239,147 @@ public class App {
         props.load(new FileInputStream(path));
         return props;
     }
+    
+    /**
+     * Generates an example community detection algorithms json string
+     * with actual docker images
+     * @return json string
+     * @throws Exception 
+     */
+    public static String generateExampleCommunityDetectionAlgorithms() throws Exception {
+        
+         HashMap<String, CommunityDetectionAlgorithm> algoSet = new HashMap<>();
+        //gprofiler term mapper
+        CommunityDetectionAlgorithm cda = new CommunityDetectionAlgorithm();
+        cda.setName("gprofilersingletermv2");
+        algoSet.put(cda.getName(), cda);
+        cda.setDescription("Uses gprofiler to find best term below pvalue cut off"
+                + "using a list of genes as input");
+        cda.setDockerImage("coleslawndex/gprofilersingletermv2");
+        cda.setInputDataFormat("GENELIST");
+        cda.setOutputDataFormat("MAPPEDTERMJSON");
+        cda.setVersion("1.0.0");
+        CustomParameter cp = new CustomParameter();
+        cp.setDescription("Maximum pvalue to allow for results");
+        cp.setName("--maxpval");
+        cp.setType("value");
+        cp.setDefaultValue("0.00001");
+        cp.setDisplayName("Maximum Pvalue");
+        cp.setValidationHelp("Must be a number");
+        cp.setValidationType("number");
+        HashSet<CustomParameter> cpSet = new HashSet<>();
+        cpSet.add(cp);
+        cda.setCustomParameters(cpSet);
+        
+        //louvain
+        CommunityDetectionAlgorithm cdb = new CommunityDetectionAlgorithm();
+        cdb.setName("louvain");
+        algoSet.put(cdb.getName(), cdb );
+        cdb.setDescription("Runs louvain community detection algorithm");
+        cdb.setDockerImage("ecdymore/slouvaintest");
+        cdb.setInputDataFormat("EDGELIST");
+        cdb.setOutputDataFormat("COMMUNITYDETECTRESULT");
+        cdb.setVersion("2.0.0");
+        
+        cp = new CustomParameter();
+        cp.setName("--directed");
+        cp.setDescription("If set, generate directed graph");
+        cp.setDisplayName("Generate directed graph");
+        cp.setType("flag");
+        cpSet = new HashSet<>();
+        cpSet.add(cp);
+        
+        cp = new CustomParameter();
+        cp.setName("--configmodel");
+        cp.setDescription("Configuration model which must be one of following:"
+                + ": RB, RBER, CPM, Suprise, Significance, Default");
+        cp.setDisplayName("Configuration Model");
+        cp.setType("value");
+        cp.setDefaultValue("Default");
+        cp.setValidationType("string");
+        cp.setValidationHelp("Must be one of following: RB, RBER, CPM, Suprise, Significance, Default");
+        cp.setValidationRegex("RB|RBER|CPM|Suprise|Significance|Default");
+        cpSet.add(cp);
+        
+        cdb.setCustomParameters(cpSet);
+        
+        //infomap
+        CommunityDetectionAlgorithm cdc = new CommunityDetectionAlgorithm();
+        cdc.setName("infomap");
+        algoSet.put(cdc.getName(), cdc);
+        cdc.setDescription("Runs infomap community detection algorithm");
+        cdc.setDockerImage("ecdymore/sinfomaptest");
+        cdc.setInputDataFormat("EDGELIST");
+        cdc.setOutputDataFormat("COMMUNITYDETECTRESULT");
+        cdc.setVersion("2.0.0");
+        
+        cp = new CustomParameter();
+        cp.setName("--directed");
+        cp.setDescription("If set, infomap assumes directed links");
+        cp.setDisplayName("Assume Directed Links");
+        cp.setType("flag");
+        cpSet = new HashSet<>();
+        cpSet.add(cp);
+        
+        cp = new CustomParameter();
+        cp.setName("--enableoverlapping");
+        cp.setDescription("If set, Let nodes be part of different and "
+                + "overlapping modules. Applies to ordinary networks by "
+                + "first representing the memoryless dynamics with memory "
+                + "nodes.");
+        cp.setDisplayName("Enable Overlapping");
+        cp.setType("flag");
+        cpSet.add(cp);
+        
+        cp = new CustomParameter();
+        cp.setName("--markovtime");
+        cp.setDescription("Scale link flow with this value to change the cost "
+                + "of moving between modules. Higher for less modules");
+        cp.setDisplayName("Markov time");
+        cp.setType("value");
+        cp.setDefaultValue("0.75");
+        cp.setValidationType("number");
+        cp.setValidationHelp("Should be a number");
+        cpSet.add(cp);
+        cdc.setCustomParameters(cpSet);
+        
+        
+        //clixo
+        CommunityDetectionAlgorithm cde = new CommunityDetectionAlgorithm();
+        cde.setName("clixo");
+        algoSet.put(cde.getName(), cde);
+        cde.setDescription("Runs clixo community detection algorithm");
+        cde.setDockerImage("coleslawndex/clixo:1.0");
+        cde.setInputDataFormat("EDGELIST");
+        cde.setOutputDataFormat("COMMUNITYDETECTRESULT");
+        cde.setVersion("2.0.0");
+        
+        cp = new CustomParameter();
+        cp.setName("--alpha");
+        cp.setDescription("Threshold between clusters");
+        cp.setDisplayName("Alpha");
+        cp.setType("value");
+        cp.setDefaultValue("0.1");
+        cp.setValidationType("number");
+        
+        cpSet = new HashSet<>();
+        cpSet.add(cp);
+        
+        cp = new CustomParameter();
+        cp.setName("--beta");
+        cp.setDescription("Merge similarity for overlapping clusters");
+        cp.setDisplayName("Beta");
+        cp.setType("value");
+        cp.setDefaultValue("0.5");
+        cp.setValidationType("number");
+        cpSet.add(cp);
+        cde.setCustomParameters(cpSet);
+        
+        CommunityDetectionAlgorithms algos = new CommunityDetectionAlgorithms();
+        algos.setAlgorithms(algoSet);
+        ObjectMapper mappy = new ObjectMapper();
+        return mappy.writerWithDefaultPrettyPrinter().writeValueAsString(algos);
+    }
    
     /**
      * Generates example Configuration file writing to standard out
@@ -241,8 +401,8 @@ public class App {
         sb.append("# Algorithm/ docker command timeout in seconds. Anything taking longer will be killed\n");
         sb.append(Configuration.ALGORITHM_TIMEOUT + " = 180\n\n");
         
-        sb.append("# Json fragment that is a mapping of algorithm names to docker images\n");
-        sb.append(Configuration.ALGORITHM_MAP + " = {\"infomap\": \"coleslawndex/infomap\"}\n\n");
+        sb.append("# Path to file containing json of algorithms\n");
+        sb.append(Configuration.ALGORITHM_MAP + " = " + CD_ALGORITHMS_FILE + "\n\n");
         
         sb.append("# Sets HOST URL prefix (value is prefixed to Location header when query is invoked. Can be commented out)\n");
         sb.append("# " + Configuration.HOST_URL + " = http://ndexbio.org\n");

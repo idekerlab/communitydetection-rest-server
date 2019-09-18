@@ -31,6 +31,7 @@ import org.ndexbio.communitydetection.rest.model.CommunityDetectionResultStatus;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionResult;
 import org.ndexbio.communitydetection.rest.model.ErrorResponse;
 import org.ndexbio.communitydetection.rest.model.Task;
+import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionBadRequestException;
 import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionException;
 
 /**
@@ -117,6 +118,98 @@ public class TestCommunityDetection {
                     ErrorResponse.class);
             assertEquals("Error requesting CommunityDetection", er.getMessage());
             assertEquals("some error", er.getDescription());
+            verify(mockEngine);
+
+        } finally {
+            _folder.delete();
+        }
+    }
+    
+    @Test
+    public void testRequestWhereQueryRaisesBadRequestError() throws Exception {
+        try {
+            File tempDir = _folder.newFolder();
+            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
+            
+            FileWriter fw = new FileWriter(confFile);
+            
+            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
+            fw.flush();
+            fw.close();
+            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
+            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+
+            MockHttpRequest request = MockHttpRequest.post(Configuration.V_ONE_PATH);
+            CommunityDetectionRequest query = new CommunityDetectionRequest();
+            ObjectMapper omappy = new ObjectMapper();
+            request.contentType(MediaType.APPLICATION_JSON);
+            
+            request.content(omappy.writeValueAsBytes(query));
+
+
+            MockHttpResponse response = new MockHttpResponse();
+            Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
+            
+            // create mock enrichment engine that returns null
+            CommunityDetectionEngine mockEngine = createMock(CommunityDetectionEngine.class);
+            expect(mockEngine.request(notNull())).andThrow(new CommunityDetectionBadRequestException("some error"));
+            replay(mockEngine);
+            Configuration.getInstance().setCommunityDetectionEngine(mockEngine);
+            
+            dispatcher.invoke(request, response);
+            assertEquals(500, response.getStatus());
+            ObjectMapper mapper = new ObjectMapper();
+            ErrorResponse er = mapper.readValue(response.getOutput(),
+                    ErrorResponse.class);
+            assertEquals("Bad request received", er.getMessage());
+            assertEquals("some error", er.getDescription());
+            verify(mockEngine);
+
+        } finally {
+            _folder.delete();
+        }
+    }
+    
+    @Test
+    public void testRequestWhereQueryRaisesBadRequestErrorWithErrorResponse() throws Exception {
+        try {
+            File tempDir = _folder.newFolder();
+            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
+            
+            FileWriter fw = new FileWriter(confFile);
+            
+            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
+            fw.flush();
+            fw.close();
+            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
+            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+
+            MockHttpRequest request = MockHttpRequest.post(Configuration.V_ONE_PATH);
+            CommunityDetectionRequest query = new CommunityDetectionRequest();
+            ObjectMapper omappy = new ObjectMapper();
+            request.contentType(MediaType.APPLICATION_JSON);
+            
+            request.content(omappy.writeValueAsBytes(query));
+
+
+            MockHttpResponse response = new MockHttpResponse();
+            Configuration.setAlternateConfigurationFile(confFile.getAbsolutePath());
+            
+            // create mock enrichment engine that returns null
+            CommunityDetectionEngine mockEngine = createMock(CommunityDetectionEngine.class);
+            ErrorResponse xer = new ErrorResponse();
+            xer.setMessage("hello");
+            expect(mockEngine.request(notNull())).andThrow(new CommunityDetectionBadRequestException("some error", xer));
+            replay(mockEngine);
+            Configuration.getInstance().setCommunityDetectionEngine(mockEngine);
+            
+            dispatcher.invoke(request, response);
+            assertEquals(500, response.getStatus());
+            ObjectMapper mapper = new ObjectMapper();
+            ErrorResponse er = mapper.readValue(response.getOutput(),
+                    ErrorResponse.class);
+            assertEquals("hello", er.getMessage());
+            assertEquals(null, er.getDescription());
             verify(mockEngine);
 
         } finally {

@@ -1,12 +1,9 @@
 package org.ndexbio.communitydetection.rest.services;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map.Entry;
 import java.util.Properties;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -14,6 +11,7 @@ import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionEx
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ndexbio.communitydetection.rest.engine.CommunityDetectionEngine;
+import org.ndexbio.communitydetection.rest.model.CommunityDetectionAlgorithms;
 
 /**
  * Contains configuration for Enrichment. The configuration
@@ -44,7 +42,7 @@ public class Configuration {
     private static String _hostURL;
     private static String _dockerCmd;
     private static int _numWorkers;
-    private static HashMap<String, String> _algoMap;
+    private static CommunityDetectionAlgorithms _algorithms;
     private static long _timeOut;
     
     /**
@@ -73,7 +71,7 @@ public class Configuration {
         _numWorkers = Integer.parseInt(props.getProperty(Configuration.NUM_WORKERS, "1"));
         _hostURL = props.getProperty(Configuration.HOST_URL, "");
         _dockerCmd = props.getProperty(Configuration.DOCKER_CMD, "docker");
-        _algoMap = parseAlgorithmMap(props.getProperty(Configuration.ALGORITHM_MAP, "{\"infomap\": \"coleslawndex/infomap\"}"));
+        _algorithms = getAlgorithms(props.getProperty(Configuration.ALGORITHM_MAP, null));
         _timeOut = Long.parseLong(props.getProperty(Configuration.ALGORITHM_TIMEOUT, "180"));
         if (_hostURL.trim().isEmpty()){
             _hostURL = "";
@@ -82,22 +80,22 @@ public class Configuration {
         }
     }
     
-    protected HashMap<String, String> parseAlgorithmMap(final String algoMapString){
+    protected CommunityDetectionAlgorithms getAlgorithms(final String algoPath){
+        if (algoPath == null){
+            _logger.error("Path to algorithms json file is null");
+            return null;
+        }
         ObjectMapper mapper = new ObjectMapper();
-        HashMap<String, String> hMap = new HashMap<String, String>();
         try {
-            JsonNode actualObj = mapper.readTree(algoMapString);
-            Iterator<Entry<String, JsonNode>> fields = actualObj.fields();
-            _logger.info("Algorithm to docker image mapping: ");
-            while(fields.hasNext()){
-                Entry<String, JsonNode> jsonField = fields.next();
-                _logger.info(jsonField.getKey() + " => " + jsonField.getValue().asText());
-                hMap.put(jsonField.getKey(), jsonField.getValue().asText());
+            File algoFile = new File(algoPath);
+            if (algoFile.isFile() == false){
+                _logger.error(algoFile.getAbsolutePath() + " is not a file");
+                return null;
             }
-            return hMap;
+            return mapper.readValue(algoFile, CommunityDetectionAlgorithms.class);
         }
         catch(IOException io){
-              _logger.error("Error parsing json: " + algoMapString + " : " + io.getMessage());
+              _logger.error("Error parsing json: " + algoPath + " : " + io.getMessage());
         }
         
         return null;
@@ -139,8 +137,8 @@ public class Configuration {
         return _dockerCmd;
     }
     
-    public HashMap<String, String> getAlgorithmToDockerMap(){
-        return _algoMap;
+    public CommunityDetectionAlgorithms getAlgorithms(){
+        return _algorithms;
     }
     
     /**
