@@ -282,7 +282,8 @@ public class DockerCommunityDetectionRunner implements Callable {
             mCmd.add("-v");
             mCmd.add(mapDir);
             mCmd.add(_dockerImage);
-            if (this._customParameters != null){
+            if (_customParameters != null){
+                _logger.debug("Custom Parameters is not null adding to command line call");
                 for (String key : _customParameters.keySet()){
                     mCmd.add(key);
                     
@@ -291,6 +292,8 @@ public class DockerCommunityDetectionRunner implements Callable {
                         mCmd.add(val);
                     }
                 }
+            } else {
+                _logger.debug("Custom Parameters is null");
             }
             mCmd.add(inputFile);
             int  exitValue = _runner.runCommandLineProcess(_timeOut, _timeUnit,
