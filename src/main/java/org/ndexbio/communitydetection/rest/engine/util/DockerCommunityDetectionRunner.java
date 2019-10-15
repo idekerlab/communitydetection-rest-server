@@ -279,6 +279,7 @@ public class DockerCommunityDetectionRunner implements Callable {
             ArrayList<String> mCmd = new ArrayList<String>();
             mCmd.add(_dockerCmd);
             mCmd.add("run");
+            mCmd.add("--rm");
             mCmd.add("-v");
             mCmd.add(mapDir);
             mCmd.add(_dockerImage);
