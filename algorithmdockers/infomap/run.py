@@ -25,7 +25,7 @@ def _parse_arguments(desc, args):
                         help='If set, disable infomap overlapping')
     parser.add_argument('--outdir', default='/tmp',
                         help='Sets directory where Infomap writes output')
-    parser.add_argument('--markovtime', default=0.5, type=float,
+    parser.add_argument('--markovtime', default=0.75, type=float,
                         help='Sets markov-time')
     return parser.parse_args(args)
 

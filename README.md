@@ -133,7 +133,7 @@ Packaged from [https://louvain-igraph.readthedocs.io/en/latest/index.html](https
 - Graph weight: works on both weighted and unweighted graph; does not support negative edge weight
 - `param` directed: true/false, whether a graph is directed or not (does not support half directed half undirected graph). *default: false*
 - `param` overlap: true/false, whether or not allowing overlapping community detection. *default: false* **Please see 'Input graph(s)' and 'overlapping vs. deep community detection' for conflicts**
-- `param` deep: true/false, detect hierarchy or not. *default: true* **Please see 'Input graph(s)' and 'overlapping vs. deep community detection' for conflicts**
+- `param` deep: true/false, detect hierarchy or not. *default: false* **Please see 'Input graph(s)' and 'overlapping vs. deep community detection' for conflicts**
 - `param` interslice_weight: the weight on the new edge connecting same nodes shared by different graphs when multiple graphs is used. *default: 0.1*
 - `param` resolution_parameter: resulotion is an indicator of the number of communities, and since louvain build communites by iteratively merging child nodes, if the resolution parameter is high, louvain will perform this merging slowly while retaining a high number of relatively small commnities and stop merging and add the root node when number of community is still high; if the resolution parameter is low, louvain will quickly merge to a small number of relatively large communities and stop. (Short version: want more communities, use higher resolution_parameter and vice versa) *default: 0.1*
 
