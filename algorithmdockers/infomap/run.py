@@ -77,7 +77,7 @@ def get_truncated_file(inputfile):
     return inputfilename[0:period_index]
 
 
-def run_infomap(graph, outdir, markovtime=0.5,
+def run_infomap(graph, outdir, markovtime=0.75,
                 overlap=False, directed=False):
 
     """
