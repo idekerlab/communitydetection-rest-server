@@ -27,6 +27,8 @@ def _parse_arguments(desc, args):
                         help='Sets directory where Infomap writes output')
     parser.add_argument('--markovtime', default=0.75, type=float,
                         help='Sets markov-time')
+    parser.add_argument('--seed', default=None, type=int,
+                        help='Sets seed for random generator')
     return parser.parse_args(args)
 
 
@@ -78,7 +80,7 @@ def get_truncated_file(inputfile):
 
 
 def run_infomap(graph, outdir, markovtime=0.75,
-                overlap=False, directed=False):
+                overlap=False, directed=False, seed=None):
 
     """
     :outdir: the output directory to comprehend the output link file
@@ -95,7 +97,9 @@ def run_infomap(graph, outdir, markovtime=0.75,
         cmdargs.append('--overlapping')
     if directed is True:
         cmdargs.append('-d')
-
+    if seed != None:
+        cmdargs.append('--seed')
+        cmdargs.append(str(seed))
     cmdargs.append(graph)
     cmdargs.append(outdir)
 
@@ -194,7 +198,7 @@ def main(args):
             dval = False
 
         return run_infomap(inputfile, outdir,
-                           markovtime=theargs.markovtime,
+                           markovtime=theargs.markovtime, seed=theargs.seed, 
                            overlap=theargs.enableoverlapping,
                            directed=dval)
     except Exception as e:

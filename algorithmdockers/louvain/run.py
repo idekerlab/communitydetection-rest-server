@@ -34,12 +34,14 @@ def _parse_arguments(desc, args):
     parser.set_defaults(deep=False)
     parser.add_argument('--resolution_parameter', default=0.1, type=float,
                         help='Sets resolution parameter: higher for more clusters')
+    parser.add_argument('--seed', default=None, type=int,
+                        help='Sets seed for random generator')
     return parser.parse_args(args)
 
 
 def run_louvain(graph, config_model='Default',
                 overlap=False, directed=False, deep=False, interslice_weight=0.1,
-                resolution_parameter=0.1):
+                resolution_parameter=0.1, seed=None):
 
     """
     :outdir: the output directory to comprehend the output link file
@@ -52,6 +54,10 @@ def run_louvain(graph, config_model='Default',
     :param resolution_parameter
     :return
     """
+    
+    if seed != None:
+        louvain.set_rng_seed(seed)
+        
     def louvain_hierarchy_output(partition):
         optimiser = louvain.Optimiser()
         partition_agg = partition.aggregate_partition()
@@ -258,7 +264,7 @@ def main(args):
     try:
         inputfile = os.path.abspath(theargs.input)
 
-        return run_louvain(inputfile, config_model=theargs.configmodel, overlap=theargs.overlap, directed=theargs.directed, deep=theargs.deep, resolution_parameter=theargs.resolution_parameter)
+        return run_louvain(inputfile, config_model=theargs.configmodel, overlap=theargs.overlap, directed=theargs.directed, deep=theargs.deep, resolution_parameter=theargs.resolution_parameter, seed=theargs.seed)
 
     except Exception as e:
         sys.stderr.write('Caught exception: ' + str(e))
