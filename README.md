@@ -166,7 +166,7 @@ Original paper: Kramer M, Dutkowski J, Yu M, Bafna V, Ideker T. Inferring gene o
 COPYRIGHT AND LICENSE
 =====================
 
-TODO
+[Click here](LICENSE)
 
 Acknowledgements
 ================
