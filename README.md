@@ -3,16 +3,18 @@
 [maven]: http://maven.apache.org/
 [java]: https://www.oracle.com/java/index.html
 [git]: https://git-scm.com/
-
+[rest]: https://en.wikipedia.org/wiki/Representational_state_transfer
 [make]: https://www.gnu.org/software/make
+[cdapp]: https://github.com/idekerlab/cy-community-detection
 
 Community Detection REST Service
 ==================================
 
-[![Build Status](https://travis-ci.org/ndexbio/communitydetection-rest-server.svg?branch=master)](https://travis-ci.org/ndexbio/communitydetection-rest-server) 
-[![Coverage Status](https://coveralls.io/repos/github/ndexbio/communitydetection-rest-server/badge.svg)](https://coveralls.io/github/ndexbio/communitydetection-rest-server)
+[![Build Status](https://travis-ci.org/idekerlab/communitydetection-rest-server.svg?branch=master)](https://travis-ci.org/idekerlab/communitydetection-rest-server) 
+[![Coverage Status](https://coveralls.io/repos/github/idekerlab/communitydetection-rest-server/badge.svg)](https://coveralls.io/github/idekerlab/communitydetection-rest-server)
 
-Provides formated and readily callable REST service for several popular CommunityDetection algorithms. 
+Provides formated and readily callable [REST][rest] service for several popular Community Detection algorithms. 
+The service is used by the [Cytoscape Community Detection App][cdapp]
 
 This service runs using an embedded [Jetty][jetty] server and is invoked
 from the command line. 
@@ -28,8 +30,7 @@ Requirements
 
 Special software to install (cause we haven't put these into maven central)
 
-* [ndex-enrichment-rest-model](https://github.com/ndexbio/communitydetection-rest-model) built and installed via `mvn install`
-
+* [communitydetection-rest-model](https://github.com/idekerlab/communitydetection-rest-model) built and installed via `mvn install`
 
 
 Building Community Detection REST Service
@@ -40,7 +41,7 @@ installed and above Java modules have been installed.
 
 ```Bash
 # In lieu of git one can just download repo and unzip it
-git clone https://github.com/ndexbio/communitydetection-rest-server.git
+git clone https://github.com/idekerlab/communitydetection-rest-server.git
 
 cd communitydetection-rest-server
 mvn clean test install
