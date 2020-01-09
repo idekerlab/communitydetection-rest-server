@@ -8,6 +8,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -181,7 +182,7 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
             _logger.error("Received a null result, unable to save");
             return;
         }
-        
+        logResult(cdr);
         File destFile = new File(getCommunityDetectionResultFilePath(cdr.getId()));
         ObjectMapper mappy = new ObjectMapper();
         try (FileOutputStream out = new FileOutputStream(destFile)){
@@ -192,11 +193,31 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
         _results.remove(cdr.getId());
     }
     
+    protected void logResult(final CommunityDetectionResult result){
+	if (result == null){
+	    return;
+	}
+	StringBuilder sb = new StringBuilder();
+	sb.append("Result id: ");
+	sb.append(result.getId() == null ? "NULL" : result.getId());
+	sb.append(" ");
+	sb.append("start time: ");
+	sb.append(Long.toString(result.getStartTime()));
+	sb.append(" wall time: ");
+	sb.append(Long.toString(result.getWallTime()));
+	sb.append(" status: ");
+	sb.append(result.getStatus() == null ? "NULL" : result.getStatus());
+	sb.append(" message: ");
+	sb.append(result.getMessage() == null ? "NULL" : result.getMessage());
+	_logger.info(sb.toString());
+    }
+
     protected CommunityDetectionResult getCommunityDetectionResultFromDbOrFilesystem(final String id){
         ObjectMapper mappy = new ObjectMapper();
         File cdrFile = new File(getCommunityDetectionResultFilePath(id));
         if (cdrFile.isFile() == false){
-            _logger.error(cdrFile.getAbsolutePath() + " is not a file");
+            _logger.debug(cdrFile.getAbsolutePath() + " is not a file. "
+		    + "Will attempt to retreive from in memory store");
             return _results.get(id);
         }
         try {
@@ -218,6 +239,7 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
     @Override
     public String request(CommunityDetectionRequest request) throws CommunityDetectionException,
             CommunityDetectionBadRequestException {
+
         if (request == null){ 
             throw new CommunityDetectionBadRequestException("Request is null");
         }
@@ -242,7 +264,7 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
         cdr.setStatus(CommunityDetectionResult.SUBMITTED_STATUS);
         cdr.setId(id);
         _results.put(id, cdr);
-        
+        logRequest(request, id);
         String dockerImage = cda.getDockerImage();
         try {
             DockerCommunityDetectionRunner task = new DockerCommunityDetectionRunner(id, request, cdr.getStartTime(),
@@ -254,6 +276,41 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
         } catch(Exception ex){
             throw new CommunityDetectionException(ex.getMessage());
         }
+    }
+    
+    private void logRequest(final CommunityDetectionRequest request,
+	    final String id){
+	if (request == null){
+	    return;
+	}
+	StringBuilder sb = new StringBuilder();
+	sb.append("Request id: ");
+	sb.append(id == null ? "NULL" : id);
+	sb.append(" to run ( ");
+	sb.append(request.getAlgorithm() == null ? "NULL" : request.getAlgorithm());
+	
+        sb.append(") ");
+	
+	if (request.getData() == null){
+	    sb.append(" with NO data");
+	}
+	else {
+	    sb.append(" with data of type ");
+	    sb.append(request.getData().getNodeType().toString());
+	}
+	
+	Map<String, String> custParams = request.getCustomParameters();
+	String val = null;
+	if (custParams != null){
+	    sb.append(" and custom parameters: ");
+	    for (String key : custParams.keySet()){
+		sb.append(key).append("=>");
+		val = custParams.get(key);
+		sb.append(val == null ? "NULL" : val);
+		sb.append(" ");
+	    }
+	}
+	_logger.info(sb.toString());
     }
 
     @Override
@@ -282,7 +339,8 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
         }
         Future f = _futureTaskMap.get(id);
         if (f != null){
-            _logger.info("Canceling task: " + id + " result of cancel(): " +
+            _logger.info("Delete invoked, canceling task: " + id +
+		    " result of cancel(): " +
                     Boolean.toString(f.cancel(true)));
         }
         File thisTaskDir = new File(this._taskDir + File.separator + id);
