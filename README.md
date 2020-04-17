@@ -8,7 +8,7 @@
 [cdapp]: https://github.com/idekerlab/cy-community-detection
 
 Community Detection REST Service
-==================================
+===================================
 
 [![Build Status](https://travis-ci.org/idekerlab/communitydetection-rest-server.svg?branch=master)](https://travis-ci.org/idekerlab/communitydetection-rest-server) 
 [![Coverage Status](https://coveralls.io/repos/github/idekerlab/communitydetection-rest-server/badge.svg)](https://coveralls.io/github/idekerlab/communitydetection-rest-server)
