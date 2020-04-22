@@ -5,13 +5,13 @@
 [git]: https://git-scm.com/
 [rest]: https://en.wikipedia.org/wiki/Representational_state_transfer
 [make]: https://www.gnu.org/software/make
-[cdapp]: https://github.com/idekerlab/cy-community-detection
+[cdapp]: https://github.com/cytoscape/cy-community-detection
 
 Community Detection REST Service
 ==================================
 
-[![Build Status](https://travis-ci.org/idekerlab/communitydetection-rest-server.svg?branch=master)](https://travis-ci.org/idekerlab/communitydetection-rest-server) 
-[![Coverage Status](https://coveralls.io/repos/github/idekerlab/communitydetection-rest-server/badge.svg)](https://coveralls.io/github/idekerlab/communitydetection-rest-server)
+[![Build Status](https://travis-ci.com/cytoscape/communitydetection-rest-server.svg?branch=master)](https://travis-ci.com/cytoscape/communitydetection-rest-server) 
+[![Coverage Status](https://coveralls.io/repos/github/cytoscape/communitydetection-rest-server/badge.svg)](https://coveralls.io/github/cytoscape/communitydetection-rest-server)
 
 Provides formated and readily callable [REST][rest] service for several popular Community Detection algorithms. 
 The service is used by the [Cytoscape Community Detection App][cdapp]
@@ -28,11 +28,6 @@ Requirements
 * [Make][make] **(to build)**
 * [Maven][maven] 3.3 or higher **(to build)** -- tested with 3.6
 
-Special software to install (cause we haven't put these into maven central)
-
-* [communitydetection-rest-model](https://github.com/idekerlab/communitydetection-rest-model) built and installed via `mvn install`
-
-
 Building Community Detection REST Service
 =========================================
 
@@ -41,7 +36,7 @@ installed and above Java modules have been installed.
 
 ```Bash
 # In lieu of git one can just download repo and unzip it
-git clone https://github.com/idekerlab/communitydetection-rest-server.git
+git clone https://github.com/cytoscape/communitydetection-rest-server.git
 
 cd communitydetection-rest-server
 mvn clean test install
