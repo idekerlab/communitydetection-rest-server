@@ -8,7 +8,7 @@
 [cdapp]: https://github.com/cytoscape/cy-community-detection
 
 Community Detection REST Service
-==================================
+===================================
 
 [![Build Status](https://travis-ci.com/cytoscape/communitydetection-rest-server.svg?branch=master)](https://travis-ci.com/cytoscape/communitydetection-rest-server) 
 [![Coverage Status](https://coveralls.io/repos/github/cytoscape/communitydetection-rest-server/badge.svg)](https://coveralls.io/github/cytoscape/communitydetection-rest-server)
