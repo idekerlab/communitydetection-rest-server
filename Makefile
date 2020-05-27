@@ -49,9 +49,3 @@ updateversion: ## updates version in pom.xml via maven command
 runwar: ## Builds war file and runs webapp via Jetty
 	mvn jetty:run-war
 
-installdependencies: ## For running on travis, checks out and builds dependencies
-	mkdir -p target/tmp
-	git clone --branch=master --depth=1 https://github.com/coleslaw481/communitydetection-rest-model target/tmp/communitydetection-rest-model
-	cd target/tmp/communitydetection-rest-model ; mvn clean install -DskipTests=true -B
-	rm -rf target/tmp
-	
