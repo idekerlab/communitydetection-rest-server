@@ -54,7 +54,7 @@ The following steps cover how to create the Enrichment database.
 In the steps below **communitydetection.jar** refers to the jar
 created previously named **communitydetection-rest-\<VERSION\>-jar-with-dependencies.jar**
 
-### Step 1 Create directories and configuration file
+### Step 1 Create directories and configuration files
 
 ```bash
 # create directory
@@ -82,8 +82,8 @@ communitydetection.docker.cmd = docker
 # Algorithm/ docker command timeout in seconds. Anything taking longer will be killed
 communitydetection.algorithm.timeout = 180
 
-# Json fragment that is a mapping of algorithm names to docker images
-communitydetection.algorithm.map = {"infomap": "coleslawndex/infomap"}
+# Path to file containing json of algorithms
+communitydetection.algorithm.map = communitydetectionalgorithms.json
 
 # Sets HOST URL prefix (value is prefixed to Location header when query is invoked. Can be commented out)
 # communitydetection.host.url = http://ndexbio.org
@@ -104,8 +104,151 @@ runserver.log.level = INFO
 Replace **/tmp** paths with full path location to **communitydetection** directory 
 created earlier.
 
+```bash
+# Generate algorithms template file
+java -jar communitydetection.jar --mode examplealgo > communitydetectionalgorithms.json
+```
 
-### Step 2 Run the service
+The `communitydetectionalgorithms.json` will look like the following:
+
+```bash
+{
+  "algorithms" : {
+    "louvain" : {
+      "name" : "louvain",
+      "displayName" : null,
+      "description" : "Runs louvain community detection algorithm",
+      "version" : "2.0.0",
+      "dockerImage" : "ecdymore/slouvaintest",
+      "inputDataFormat" : "EDGELIST",
+      "outputDataFormat" : "COMMUNITYDETECTRESULT",
+      "customParameters" : [ {
+        "name" : "--directed",
+        "displayName" : "Generate directed graph",
+        "description" : "If set, generate directed graph",
+        "type" : "flag",
+        "defaultValue" : null,
+        "validationType" : null,
+        "validationHelp" : null,
+        "validationRegex" : null,
+        "minValue" : null,
+        "maxValue" : null
+      }, {
+        "name" : "--configmodel",
+        "displayName" : "Configuration Model",
+        "description" : "Configuration model which must be one of following:: RB, RBER, CPM, Suprise, Significance, Default",
+        "type" : "value",
+        "defaultValue" : "Default",
+        "validationType" : "string",
+        "validationHelp" : "Must be one of following: RB, RBER, CPM, Suprise, Significance, Default",
+        "validationRegex" : "RB|RBER|CPM|Suprise|Significance|Default",
+        "minValue" : null,
+        "maxValue" : null
+      } ]
+    },
+    "gprofilersingletermv2" : {
+      "name" : "gprofilersingletermv2",
+      "displayName" : null,
+      "description" : "Uses gprofiler to find best term below pvalue cut offusing a list of genes as input",
+      "version" : "1.0.0",
+      "dockerImage" : "coleslawndex/gprofilersingletermv2",
+      "inputDataFormat" : "GENELIST",
+      "outputDataFormat" : "MAPPEDTERMJSON",
+      "customParameters" : [ {
+        "name" : "--maxpval",
+        "displayName" : "Maximum Pvalue",
+        "description" : "Maximum pvalue to allow for results",
+        "type" : "value",
+        "defaultValue" : "0.00001",
+        "validationType" : "number",
+        "validationHelp" : "Must be a number",
+        "validationRegex" : null,
+        "minValue" : null,
+        "maxValue" : null
+      } ]
+    },
+    "clixo" : {
+      "name" : "clixo",
+      "displayName" : null,
+      "description" : "Runs clixo community detection algorithm",
+      "version" : "2.0.0",
+      "dockerImage" : "coleslawndex/clixo:1.0",
+      "inputDataFormat" : "EDGELIST",
+      "outputDataFormat" : "COMMUNITYDETECTRESULT",
+      "customParameters" : [ {
+        "name" : "--alpha",
+        "displayName" : "Alpha",
+        "description" : "Threshold between clusters",
+        "type" : "value",
+        "defaultValue" : "0.1",
+        "validationType" : "number",
+        "validationHelp" : null,
+        "validationRegex" : null,
+        "minValue" : null,
+        "maxValue" : null
+      }, {
+        "name" : "--beta",
+        "displayName" : "Beta",
+        "description" : "Merge similarity for overlapping clusters",
+        "type" : "value",
+        "defaultValue" : "0.5",
+        "validationType" : "number",
+        "validationHelp" : null,
+        "validationRegex" : null,
+        "minValue" : null,
+        "maxValue" : null
+      } ]
+    },
+    "infomap" : {
+      "name" : "infomap",
+      "displayName" : null,
+      "description" : "Runs infomap community detection algorithm",
+      "version" : "2.0.0",
+      "dockerImage" : "ecdymore/sinfomaptest",
+      "inputDataFormat" : "EDGELIST",
+      "outputDataFormat" : "COMMUNITYDETECTRESULT",
+      "customParameters" : [ {
+        "name" : "--directed",
+        "displayName" : "Assume Directed Links",
+        "description" : "If set, infomap assumes directed links",
+        "type" : "flag",
+        "defaultValue" : null,
+        "validationType" : null,
+        "validationHelp" : null,
+        "validationRegex" : null,
+        "minValue" : null,
+        "maxValue" : null
+      }, {
+        "name" : "--enableoverlapping",
+        "displayName" : "Enable Overlapping",
+        "description" : "If set, Let nodes be part of different and overlapping modules. Applies to ordinary networks by first representing the memoryless dynamics with memory nodes.",
+        "type" : "flag",
+        "defaultValue" : null,
+        "validationType" : null,
+        "validationHelp" : null,
+        "validationRegex" : null,
+        "minValue" : null,
+        "maxValue" : null
+      }, {
+        "name" : "--markovtime",
+        "displayName" : "Markov time",
+        "description" : "Scale link flow with this value to change the cost of moving between modules. Higher for less modules",
+        "type" : "value",
+        "defaultValue" : "0.75",
+        "validationType" : "number",
+        "validationHelp" : "Should be a number",
+        "validationRegex" : null,
+        "minValue" : null,
+        "maxValue" : null
+      } ]
+    }
+  }
+}
+
+```
+
+
+### Step 3 Run the service
 
 ```bash
 java -jar communitydetection.jar --mode runserver --conf communitydetection.conf
