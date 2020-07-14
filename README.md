@@ -23,10 +23,10 @@ from the command line.
 
 
 Requirements
-============
+=============
 
-* Centos 6+, Ubuntu 12+, and most other linux distributions should work
-* [Java][java] 8+ **(jdk to build)**
+* MacOS, Centos 6+, Ubuntu 12+, and most other Linux distributions should work
+* [Java][java] 11+ **(jdk to build)**
 * [Make][make] **(to build)**
 * [Maven][maven] 3.3 or higher **(to build)** -- tested with 3.6
 * [Docker] **(to run algorithms)**
@@ -53,211 +53,84 @@ is a command line application
 Running Community Detection REST Service
 ===========================================
 
-The following steps cover how to create the Enrichment database.
-In the steps below **communitydetection.jar** refers to the jar
-created previously named **communitydetection-rest-\<VERSION\>-jar-with-dependencies.jar**
+The following steps cover running the Community Detection REST Service locally.
 
-### Step 1 Create directories and configuration files
+
+**NOTE:** The instructions below should work on MacOS and Linux, but have not been tested on Windows
+
+### Step 1 Install required software
+
+To run Community Detection REST Service locally the following software must
+be installed: 
+
+* [Java][java] 11+
+
+* [Docker]
+
+### Step 2 Create directories
+
+Open a terminal and run the following commands to create `communitydetection`, 
+needed subdirectories, and to set `communitydetection` as the current working directory.
 
 ```bash
-# create directory
+# create directories communitydetection/logs and communitydetection/tasks
 mkdir -p communitydetection/logs communitydetection/tasks
 cd communitydetection
+```
 
+### Step 3 Download or build Community Detection REST Service Application
+
+The Community Detection REST Service Application can be obtained in one of two ways:
+
+ 1. From Releases link on this repository, download the the Community Detection REST Service Application jar file
+    to the `communitydetection` directory created in [Step 1](communitydetection-rest-server#step-1-create-directories-and-configuration-files).
+
+**OR**
+
+ 2. To build follow [these instructions](communitydetection-rest-server#building-community-detection-rest-service)
+    and the jar file it will be located under the `target/` directory upon successful build
+
+**NOTE:** The Community Detection REST Service Application jar file is named in this format: `communitydetection-rest-<VERSION>-jar-with-dependencies.jar`
+
+### Step 3 Create main configuration file
+
+This step creates a template configuration file used by the Community Detection REST Service. 
+An example `communitydetection.conf` file can be found [here](https://github.com/cytoscape/communitydetection-rest-server/blob/master/systemdservice/communitydetection.conf)
+
+```bash
 # Generate template configuration file
-java -jar communitydetection.jar --mode exampleconf > communitydetection.conf
+java -jar communitydetection-rest-0.7.1-jar-with-dependencies.jar --mode exampleconf > communitydetection.conf
 ```
 
-The `communitydetection.conf` file will look like the following:
+**NOTE:** Be sure to replace `/tmp` with full path to `logs` and `tasks` in `communitydetection.conf` file
 
-```bash
-# Example configuration file for Community Detection service
+### Step 4 Obtain the algorithms configuration file
 
-# Sets Community Detection task directory where results from queries are stored
-communitydetection.task.dir = /tmp/tasks
+The algorithms configuration file denotes what algorithms 
+are accessible by the Community Detection REST Service.
 
-# Sets number of workers to use to run tasks
-communitydetection.number.workers = 1
-
-# Docker command to run
-communitydetection.docker.cmd = docker
-
-# Algorithm/ docker command timeout in seconds. Anything taking longer will be killed
-communitydetection.algorithm.timeout = 180
-
-# Path to file containing json of algorithms
-communitydetection.algorithm.map = communitydetectionalgorithms.json
-
-# Sets HOST URL prefix (value is prefixed to Location header when query is invoked. Can be commented out)
-# communitydetection.host.url = http://ndexbio.org
-# Sets directory where log files will be written for Jetty web server
-runserver.log.dir = /tmp/logs
-
-# Sets port Jetty web service will be run under
-runserver.port = 8081
-
-# Sets Jetty Context Path for Community Detection (the endpoint assumes /cd so if apache doesnt redirect from there then add /cd here
-runserver.contextpath = /cd
-
-# Valid log levels DEBUG INFO WARN ERROR ALL
-runserver.log.level = INFO
-
-```
-
-Replace **/tmp** paths with full path location to **communitydetection** directory 
-created earlier.
-
-```bash
-# Generate algorithms template file
-java -jar communitydetection.jar --mode examplealgo > communitydetectionalgorithms.json
-```
-
-The `communitydetectionalgorithms.json` will look like the following:
-
-```bash
-{
-  "algorithms" : {
-    "louvain" : {
-      "name" : "louvain",
-      "displayName" : null,
-      "description" : "Runs louvain community detection algorithm",
-      "version" : "2.0.0",
-      "dockerImage" : "ecdymore/slouvaintest",
-      "inputDataFormat" : "EDGELIST",
-      "outputDataFormat" : "COMMUNITYDETECTRESULT",
-      "customParameters" : [ {
-        "name" : "--directed",
-        "displayName" : "Generate directed graph",
-        "description" : "If set, generate directed graph",
-        "type" : "flag",
-        "defaultValue" : null,
-        "validationType" : null,
-        "validationHelp" : null,
-        "validationRegex" : null,
-        "minValue" : null,
-        "maxValue" : null
-      }, {
-        "name" : "--configmodel",
-        "displayName" : "Configuration Model",
-        "description" : "Configuration model which must be one of following:: RB, RBER, CPM, Suprise, Significance, Default",
-        "type" : "value",
-        "defaultValue" : "Default",
-        "validationType" : "string",
-        "validationHelp" : "Must be one of following: RB, RBER, CPM, Suprise, Significance, Default",
-        "validationRegex" : "RB|RBER|CPM|Suprise|Significance|Default",
-        "minValue" : null,
-        "maxValue" : null
-      } ]
-    },
-    "gprofilersingletermv2" : {
-      "name" : "gprofilersingletermv2",
-      "displayName" : null,
-      "description" : "Uses gprofiler to find best term below pvalue cut offusing a list of genes as input",
-      "version" : "1.0.0",
-      "dockerImage" : "coleslawndex/gprofilersingletermv2",
-      "inputDataFormat" : "GENELIST",
-      "outputDataFormat" : "MAPPEDTERMJSON",
-      "customParameters" : [ {
-        "name" : "--maxpval",
-        "displayName" : "Maximum Pvalue",
-        "description" : "Maximum pvalue to allow for results",
-        "type" : "value",
-        "defaultValue" : "0.00001",
-        "validationType" : "number",
-        "validationHelp" : "Must be a number",
-        "validationRegex" : null,
-        "minValue" : null,
-        "maxValue" : null
-      } ]
-    },
-    "clixo" : {
-      "name" : "clixo",
-      "displayName" : null,
-      "description" : "Runs clixo community detection algorithm",
-      "version" : "2.0.0",
-      "dockerImage" : "coleslawndex/clixo:1.0",
-      "inputDataFormat" : "EDGELIST",
-      "outputDataFormat" : "COMMUNITYDETECTRESULT",
-      "customParameters" : [ {
-        "name" : "--alpha",
-        "displayName" : "Alpha",
-        "description" : "Threshold between clusters",
-        "type" : "value",
-        "defaultValue" : "0.1",
-        "validationType" : "number",
-        "validationHelp" : null,
-        "validationRegex" : null,
-        "minValue" : null,
-        "maxValue" : null
-      }, {
-        "name" : "--beta",
-        "displayName" : "Beta",
-        "description" : "Merge similarity for overlapping clusters",
-        "type" : "value",
-        "defaultValue" : "0.5",
-        "validationType" : "number",
-        "validationHelp" : null,
-        "validationRegex" : null,
-        "minValue" : null,
-        "maxValue" : null
-      } ]
-    },
-    "infomap" : {
-      "name" : "infomap",
-      "displayName" : null,
-      "description" : "Runs infomap community detection algorithm",
-      "version" : "2.0.0",
-      "dockerImage" : "ecdymore/sinfomaptest",
-      "inputDataFormat" : "EDGELIST",
-      "outputDataFormat" : "COMMUNITYDETECTRESULT",
-      "customParameters" : [ {
-        "name" : "--directed",
-        "displayName" : "Assume Directed Links",
-        "description" : "If set, infomap assumes directed links",
-        "type" : "flag",
-        "defaultValue" : null,
-        "validationType" : null,
-        "validationHelp" : null,
-        "validationRegex" : null,
-        "minValue" : null,
-        "maxValue" : null
-      }, {
-        "name" : "--enableoverlapping",
-        "displayName" : "Enable Overlapping",
-        "description" : "If set, Let nodes be part of different and overlapping modules. Applies to ordinary networks by first representing the memoryless dynamics with memory nodes.",
-        "type" : "flag",
-        "defaultValue" : null,
-        "validationType" : null,
-        "validationHelp" : null,
-        "validationRegex" : null,
-        "minValue" : null,
-        "maxValue" : null
-      }, {
-        "name" : "--markovtime",
-        "displayName" : "Markov time",
-        "description" : "Scale link flow with this value to change the cost of moving between modules. Higher for less modules",
-        "type" : "value",
-        "defaultValue" : "0.75",
-        "validationType" : "number",
-        "validationHelp" : "Should be a number",
-        "validationRegex" : null,
-        "minValue" : null,
-        "maxValue" : null
-      } ]
-    }
-  }
-}
-
-```
+Download [this file](https://github.com/cytoscape/communitydetection-rest-server/blob/master/systemdservice/communitydetectionalgorithms.json)
+saving it to the same directory where `communitydetection.conf` file resides. 
+Be sure the file name remains `communitydetectionalgorithms.json`
 
 
 ### Step 3 Run the service
 
+From the open terminal with current working directory still set to `communitydetection`
+run the following command: 
+
 ```bash
-java -jar communitydetection.jar --mode runserver --conf communitydetection.conf
+java -jar communitydetection-rest-0.7.1-jar-with-dependencies.jar --mode runserver --conf communitydetection.conf
 ```
 
+### Step 4 Test the service
 
+Open a browser and visit: http://localhost:8081/cd/ 
+
+If successful a swagger page should be displayed.
+
+
+### 
 
 Algorithms
 ===========
