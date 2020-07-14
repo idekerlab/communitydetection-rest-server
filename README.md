@@ -29,6 +29,7 @@ Requirements
 * [Java][java] 8+ **(jdk to build)**
 * [Make][make] **(to build)**
 * [Maven][maven] 3.3 or higher **(to build)** -- tested with 3.6
+* [Docker] **(to run algorithms)**
 
 Building Community Detection REST Service
 =========================================
@@ -266,22 +267,21 @@ Each algorithm has its own repository and is packaged as a
 
 ### Community Detection Algorithms
 
-#### [CliXO](https://github.com/idekerlab/cdclixo)
+ * [CliXO](https://github.com/idekerlab/cdclixo)
 
-#### [Infomap](https://github.com/idekerlab/cdinfomap)
+ * [Infomap](https://github.com/idekerlab/cdinfomap)
 
-#### [Louvain](https://github.com/idekerlab/cdlouvain)
+ * [Louvain](https://github.com/idekerlab/cdlouvain)
 
-#### [OSLOM](https://github.com/idekerlab/cdoslom)
-
+ * [OSLOM](https://github.com/idekerlab/cdoslom)
 
 ### Functional Enrichment/Term Mapping Algorithms
 
-### [Enrichr](https://github.com/idekerlab/cdenrichrgenestoterm)
+ * [Enrichr](https://github.com/idekerlab/cdenrichrgenestoterm)
 
-### [iQuery](https://github.com/idekerlab/cdiquerygenestoterm)
+ * [iQuery](https://github.com/idekerlab/cdiquerygenestoterm)
 
-### [gProfiler](https://github.com/idekerlab/cdgprofilergenestoterm)
+ * [gProfiler](https://github.com/idekerlab/cdgprofilergenestoterm)
 
 COPYRIGHT AND LICENSE
 =====================
