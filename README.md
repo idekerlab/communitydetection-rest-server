@@ -260,18 +260,37 @@ java -jar communitydetection.jar --mode runserver --conf communitydetection.conf
 Community Detection Algorithms
 ================================
 
-### Louvain
+### CliXO
 
-See https://github.com/idekerlab/cdlouvain
+See https://github.com/idekerlab/cdclixo
 
 ### Infomap
 
 See https://github.com/idekerlab/cdinfomap
 
-### CliXO
+### Louvain
 
-See https://github.com/idekerlab/cdclixo
- 
+See https://github.com/idekerlab/cdlouvain
+
+### OSLOM
+
+See https://github.com/idekerlab/cdoslom
+
+
+Functional Enrichment/Term Mapping Algorithms
+===============================================
+
+### Enrichr
+
+See https://github.com/idekerlab/cdenrichrgenestoterm
+
+### iQuery
+
+See https://github.com/idekerlab/cdiquerygenestoterm
+
+### gProfiler
+
+See https://github.com/idekerlab/cdgprofilergenestoterm
 
 COPYRIGHT AND LICENSE
 =====================
