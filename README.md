@@ -14,7 +14,7 @@ Community Detection REST Service
 [![Coverage Status](https://coveralls.io/repos/github/cytoscape/communitydetection-rest-server/badge.svg)](https://coveralls.io/github/cytoscape/communitydetection-rest-server)
 [![Documentation Status](https://readthedocs.org/projects/cdaps/badge/?version=latest&token=d51549910b0a9d03167cce98f0f550cbacc48ec26e849a72a75a36c1cb474847)](https://cdaps.readthedocs.io/en/latest/?badge=latest)
 
-Provides formated and readily callable [REST][rest] service for several popular Community Detection algorithms. 
+Provides formatted and readily callable [REST][rest] service for several popular Community Detection algorithms. 
 The service is used by the [Cytoscape Community Detection App][cdapp]
 
 This service runs using an embedded [Jetty][jetty] server and is invoked
@@ -255,13 +255,10 @@ The `communitydetectionalgorithms.json` will look like the following:
 java -jar communitydetection.jar --mode runserver --conf communitydetection.conf
 ```
 
-Input/Output Format
-================
 
-TODO
 
 Community Detection Algorithms
-===========================
+================================
 
 ### Louvain
 
@@ -269,26 +266,12 @@ See https://github.com/idekerlab/cdlouvain
 
 ### Infomap
 
-Packaged from [mapequation](https://www.mapequation.org/code.html)
-
-- A method based on Flux. Detect communities from dynamics on the network.
-- Result hierarchy shallower than louvain, but can possess overlapping communites.
-- Work on any graph
-- `param` overlap: true/false, whether allow overlapping communites to be detected. When set to true and the network is large, can render substantial increase in runtime.  *default: false*
-- `param` direct: true/false, whether the input network is directed or not.  *default: false*
-- `param` markovtime: a positive number indicating link flow/ cost of moving between modules. Higher for less communities.  *default: 0.75*
+See https://github.com/idekerlab/cdinfomap
 
 ### CliXO
 
-Packaged from [https://github.com/fanzheng10/CliXO](https://github.com/fanzheng10/CliXO)
-Original paper: Kramer M, Dutkowski J, Yu M, Bafna V, Ideker T. Inferring gene ontologies from pairwise similarity data. Bioinformatics, 30: i34-i42. 2014. doi: 10.1093/bioinformatics/btu282
-
-- A classical method that iteratively detects hierarchy based on cliques from changing edge weight threshold.
-- Only work on graph with edge weights.
-- If want the runtime to be reasonable, the maximum size of network is of hundreds of nodes.
-- `param` alpha: threshold between cluster layers  *default:0.1*
-- `param` beta: merge similarity for overlapping clusters  *default:0.5*
-
+See https://github.com/idekerlab/cdclixo
+ 
 
 COPYRIGHT AND LICENSE
 =====================
