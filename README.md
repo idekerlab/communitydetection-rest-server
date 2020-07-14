@@ -6,6 +6,7 @@
 [rest]: https://en.wikipedia.org/wiki/Representational_state_transfer
 [make]: https://www.gnu.org/software/make
 [cdapp]: https://github.com/cytoscape/cy-community-detection
+[docker]: https://www.docker.com/
 
 Community Detection REST Service
 ===================================
@@ -257,40 +258,30 @@ java -jar communitydetection.jar --mode runserver --conf communitydetection.conf
 
 
 
-Community Detection Algorithms
-================================
+Algorithms
+===========
 
-### CliXO
+Each algorithm has its own repository and is packaged as a
+[Docker](docker) image
 
-See https://github.com/idekerlab/cdclixo
+### Community Detection Algorithms
 
-### Infomap
+#### [CliXO](https://github.com/idekerlab/cdclixo)
 
-See https://github.com/idekerlab/cdinfomap
+#### [Infomap](https://github.com/idekerlab/cdinfomap)
 
-### Louvain
+#### [Louvain](https://github.com/idekerlab/cdlouvain)
 
-See https://github.com/idekerlab/cdlouvain
-
-### OSLOM
-
-See https://github.com/idekerlab/cdoslom
+#### [OSLOM](https://github.com/idekerlab/cdoslom)
 
 
-Functional Enrichment/Term Mapping Algorithms
-===============================================
+### Functional Enrichment/Term Mapping Algorithms
 
-### Enrichr
+### [Enrichr](https://github.com/idekerlab/cdenrichrgenestoterm)
 
-See https://github.com/idekerlab/cdenrichrgenestoterm
+### [iQuery](https://github.com/idekerlab/cdiquerygenestoterm)
 
-### iQuery
-
-See https://github.com/idekerlab/cdiquerygenestoterm
-
-### gProfiler
-
-See https://github.com/idekerlab/cdgprofilergenestoterm
+### [gProfiler](https://github.com/idekerlab/cdgprofilergenestoterm)
 
 COPYRIGHT AND LICENSE
 =====================
