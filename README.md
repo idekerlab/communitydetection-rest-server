@@ -49,88 +49,10 @@ The above command will create a jar file under **target/** named
 **communitydetection-rest-\<VERSION\>-jar-with-dependencies.jar** that
 is a command line application
 
+Running Community Detection REST Service locally
+==================================================
 
-Running Community Detection REST Service
-===========================================
-
-The following steps cover running the Community Detection REST Service locally.
-
-
-**NOTE:** The instructions below should work on MacOS and Linux, but have not been tested on Windows
-
-### Step 1 Install required software
-
-To run Community Detection REST Service locally the following software must
-be installed: 
-
-* [Java][java] 11+
-
-* [Docker]
-
-### Step 2 Create directories
-
-Open a terminal and run the following commands to create `communitydetection`, 
-needed subdirectories, and to set `communitydetection` as the current working directory.
-
-```bash
-# create directories communitydetection/logs and communitydetection/tasks
-mkdir -p communitydetection/logs communitydetection/tasks
-cd communitydetection
-```
-
-### Step 3 Download or build Community Detection REST Service Application
-
-The Community Detection REST Service Application can be obtained in one of two ways:
-
- 1. From Releases link on this repository, download the the Community Detection REST Service Application jar file
-    to the `communitydetection` directory created in [Step 1](communitydetection-rest-server#step-1-create-directories-and-configuration-files).
-
-**OR**
-
- 2. To build follow [these instructions](communitydetection-rest-server#building-community-detection-rest-service)
-    and the jar file it will be located under the `target/` directory upon successful build
-
-**NOTE:** The Community Detection REST Service Application jar file is named in this format: `communitydetection-rest-<VERSION>-jar-with-dependencies.jar`
-
-### Step 3 Create main configuration file
-
-This step creates a template configuration file used by the Community Detection REST Service. 
-An example `communitydetection.conf` file can be found [here](https://github.com/cytoscape/communitydetection-rest-server/blob/master/systemdservice/communitydetection.conf)
-
-```bash
-# Generate template configuration file
-java -jar communitydetection-rest-0.7.1-jar-with-dependencies.jar --mode exampleconf > communitydetection.conf
-```
-
-**NOTE:** Be sure to replace `/tmp` with full path to `logs` and `tasks` in `communitydetection.conf` file
-
-### Step 4 Obtain the algorithms configuration file
-
-The algorithms configuration file denotes what algorithms 
-are accessible by the Community Detection REST Service.
-
-Download [this file](https://github.com/cytoscape/communitydetection-rest-server/blob/master/systemdservice/communitydetectionalgorithms.json)
-saving it to the same directory where `communitydetection.conf` file resides. 
-Be sure the file name remains `communitydetectionalgorithms.json`
-
-
-### Step 3 Run the service
-
-From the open terminal with current working directory still set to `communitydetection`
-run the following command: 
-
-```bash
-java -jar communitydetection-rest-0.7.1-jar-with-dependencies.jar --mode runserver --conf communitydetection.conf
-```
-
-### Step 4 Test the service
-
-Open a browser and visit: http://localhost:8081/cd/ 
-
-If successful a swagger page should be displayed.
-
-
-### 
+[Click here for instructions on how to run the service locally](https://github.com/cytoscape/communitydetection-rest-server/wiki/Running-Community-Detection-REST-Service-locally)
 
 Algorithms
 ===========
