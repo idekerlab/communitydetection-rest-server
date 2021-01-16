@@ -12,6 +12,7 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -248,7 +249,7 @@ public class App {
      */
     public static String generateExampleCommunityDetectionAlgorithms() throws Exception {
         
-         HashMap<String, CommunityDetectionAlgorithm> algoSet = new HashMap<>();
+         LinkedHashMap<String, CommunityDetectionAlgorithm> algoSet = new LinkedHashMap<>();
         //gprofiler term mapper
         CommunityDetectionAlgorithm cda = new CommunityDetectionAlgorithm();
         cda.setName("gprofilersingletermv2");
