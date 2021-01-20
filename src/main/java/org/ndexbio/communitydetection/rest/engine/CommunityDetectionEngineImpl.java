@@ -289,7 +289,7 @@ public class CommunityDetectionEngineImpl implements CommunityDetectionEngine {
 	sb.append(" to run ( ");
 	sb.append(request.getAlgorithm() == null ? "NULL" : request.getAlgorithm());
 	
-        sb.append(") ");
+        sb.append(" ) ");
 	
 	if (request.getData() == null){
 	    sb.append(" with NO data");
