@@ -1,5 +1,6 @@
 package org.ndexbio.communitydetection.rest.services; // Note your package will be {{ groupId }}.rest
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.net.URI;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -9,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -21,6 +23,7 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionRequest;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionResult;
@@ -53,6 +56,94 @@ import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionEx
 public class CommunityDetection {
     
     static Logger logger = LoggerFactory.getLogger(CommunityDetection.class);
+    
+	
+	@POST
+	@Path(Configuration.V_ONE_PATH + "/" + Configuration.LEGACY_DIFFUSION_PATH + "/")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Operation(summary = "Legacy endpoint to run network propagation",
+			   description="Payload must be a CX network containing the nodes, "
+					   + "edges and nodeAttributes aspects, as described in Request Body below.",
+			   responses = {
+				   @ApiResponse(responseCode = "200", 
+						        description = "The response body will contain a CX network "
+										+ "containing the nodes, edges, and nodeAttributes aspects. "
+										+ "Each node will have two associated attributes, "
+										+ "output_attribute_name_rank and output_attribute_name_heat "
+										+ "where output_attribute_name can be set via the query "
+										+ "string parameters (e.g., diffusion_output_rank and "
+										+ "diffusion_output_heat). The _heat attribute will "
+										+ "contain the heat of the node after diffusion. The _rank "
+										+ "attribute will have the rank of the node relative to the "
+										+ "heats of all other nodes in the network, starting with 0 "
+										+ "as the hottest node.\n" + "\n"
+										+ "Note that while _rank and _heat attributes "
+										+ "will be returned for each node in the CX network, "
+										+ "attributes present in the input network and not "
+										+ "related to heat_diffusion are not guaranteed to be returned.",
+								content = @Content(mediaType = MediaType.APPLICATION_JSON)),
+				   @ApiResponse(responseCode = "500",
+						        description = "There was an error",
+				                content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                                  schema = @Schema(implementation = ErrorResponse.class)))
+			   })
+	public Response legacyDiffusion(@RequestBody(description="The body of the request must be a CX network "
+			+ "containing the nodes, edges, and nodeAttributes aspects. There must exist at least one "
+			+ "nodeAttribute with a key name that matches the input_attribute_name parameter and holds "
+			+ "a double, which will be interepreted as the heat of that node. (This condition can be "
+			+ "minimally fulfilled by omitting the input_attribute_name parameter, and having at "
+			+ "least one node with an attribute named diffusion_input with value 1.0.)\n" +
+"\n" +
+"All nodes that do not have this nodeAttribute set will be treated as having zero heat.", required = true) final String cxdata,
+			@Parameter(description = "The upper bound on the exponential multiplication performed by diffusion default 0.1") @QueryParam("time") double time,
+			@Parameter(description = "If True, will create a normalized laplacian matrix for diffusion") @QueryParam("normalize_laplacian") boolean normalizeLaplacian,
+			@Parameter(description = "The key diffusion will use to search for heats in the node attributes") @QueryParam("input_attribute_name") final String inputAttributeName,
+			@Parameter(description = "Will be the prefix of the _rank and _heat attributes created by diffusion") @QueryParam("output_attribute_name") final String outputAttributeName) {
+		
+		ObjectMapper omapper = new ObjectMapper();
+		// Create CommunityDetectionRequest passing cxdata in "data" field
+		CommunityDetectionRequest cdr = new CommunityDetectionRequest();
+		try {
+			cdr.setData(omapper.readTree(cxdata));
+		} catch(JsonProcessingException jpe){
+			ErrorResponse er = new ErrorResponse("Error requesting Diffusion", jpe);
+            return Response.serverError().type(MediaType.APPLICATION_JSON).entity(er.asJson()).build();
+		}
+		cdr.setAlgorithm("legacynetworkheatdiffusion");
+		
+		try {
+			CommunityDetectionEngine engine = Configuration.getInstance().getCommunityDetectionEngine();
+				if (engine == null){
+					throw new NullPointerException("CommunityDetection Engine not loaded");
+				}
+			// Submit task to service
+			String id = engine.request(cdr);
+			if (id == null){
+					throw new CommunityDetectionException("No id returned from CommunityDetection engine");
+			}
+			// Wait for completion by invoking status once per second
+			CommunityDetectionResult cRes = engine.getResult(id);
+			while (cRes.getProgress() < 100){				
+				Thread.sleep(1000);
+				cRes = engine.getResult(id);
+			}
+			if (cRes.getStatus().equals(CommunityDetectionResult.COMPLETE_STATUS)){
+				return Response.status(Response.Status.OK).type(MediaType.APPLICATION_JSON).entity(cRes.getResult()).build();
+			}
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).type(MediaType.APPLICATION_JSON).entity(cRes.getResult()).build();
+
+		} catch(CommunityDetectionBadRequestException breq){
+            ErrorResponse er = breq.getErrorResponse();
+            if (er == null){
+                er = new ErrorResponse("Bad request received", breq);
+            }
+            return Response.serverError().type(MediaType.APPLICATION_JSON).entity(er.asJson()).build();
+		}catch(Exception ex){
+            ErrorResponse er = new ErrorResponse("Error requesting CommunityDetection", ex);
+            return Response.serverError().type(MediaType.APPLICATION_JSON).entity(er.asJson()).build();
+        }
+	}
     
     /**
      * Handles requests to do enrichment

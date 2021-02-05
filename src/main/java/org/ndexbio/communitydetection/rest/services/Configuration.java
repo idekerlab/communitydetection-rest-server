@@ -24,6 +24,7 @@ public class Configuration {
     
     public static final String APPLICATION_PATH = "/communitydetection";
     public static final String V_ONE_PATH = "/v1";
+	public static final String LEGACY_DIFFUSION_PATH = "/diffusion";
     public static final String COMMUNITY_DETECTION_CONFIG = "COMMUNITY_DETECTION_CONFIG";
     
     public static final String TASK_DIR = "communitydetection.task.dir";
