@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Properties;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -11,6 +13,7 @@ import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionEx
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ndexbio.communitydetection.rest.engine.CommunityDetectionEngine;
+import org.ndexbio.communitydetection.rest.model.CommunityDetectionAlgorithm;
 import org.ndexbio.communitydetection.rest.model.CommunityDetectionAlgorithms;
 
 /**
@@ -44,6 +47,7 @@ public class Configuration {
     private static String _dockerCmd;
     private static int _numWorkers;
     private static CommunityDetectionAlgorithms _algorithms;
+	private static CommunityDetectionAlgorithm _diffusionAlgo;
     private static long _timeOut;
     
     /**
@@ -73,6 +77,19 @@ public class Configuration {
         _hostURL = props.getProperty(Configuration.HOST_URL, "");
         _dockerCmd = props.getProperty(Configuration.DOCKER_CMD, "docker");
         _algorithms = getAlgorithms(props.getProperty(Configuration.ALGORITHM_MAP, null));
+		if (_algorithms != null){
+			for (String algoName : _algorithms.getAlgorithms().keySet()){
+				CommunityDetectionAlgorithm cda = _algorithms.getAlgorithms().get(algoName);
+				if (cda.getInputDataFormat().equals("CXMATE_INPUT") &&
+						cda.getOutputDataFormat().equals("CXMATE_OUTPUT")){
+					_diffusionAlgo = cda;
+					_logger.info("Found diffusion algorithm: {} - {} "
+							+ cda.getName(), cda.getDisplayName());
+					break;
+				}
+			}
+		}
+		
         _timeOut = Long.parseLong(props.getProperty(Configuration.ALGORITHM_TIMEOUT, "180"));
         if (_hostURL.trim().isEmpty()){
             _hostURL = "";
@@ -118,6 +135,10 @@ public class Configuration {
         return _hostURL;
     }
     
+	public CommunityDetectionAlgorithm getDiffusionAlgorithm(){
+		return _diffusionAlgo;
+	}
+	
     /**
      * Gets directory where enrichment task results should be stored
      * @return 
