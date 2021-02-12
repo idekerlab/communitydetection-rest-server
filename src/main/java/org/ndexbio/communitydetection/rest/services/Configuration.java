@@ -36,6 +36,7 @@ public class Configuration {
     public static final String DOCKER_CMD = "communitydetection.docker.cmd";
     public static final String ALGORITHM_MAP = "communitydetection.algorithm.map";
     public static final String ALGORITHM_TIMEOUT = "communitydetection.algorithm.timeout";
+	public static final String DIFFUSION_POLLDELAY = "communitydetection.diffusion.polldelay";
     
     
     private static Configuration INSTANCE;
@@ -49,6 +50,7 @@ public class Configuration {
     private static CommunityDetectionAlgorithms _algorithms;
 	private static CommunityDetectionAlgorithm _diffusionAlgo;
     private static long _timeOut;
+	private static long _diffusionPollingDelay;
     
     /**
      * Constructor that attempts to get configuration from properties file
@@ -76,15 +78,17 @@ public class Configuration {
         _numWorkers = Integer.parseInt(props.getProperty(Configuration.NUM_WORKERS, "1"));
         _hostURL = props.getProperty(Configuration.HOST_URL, "");
         _dockerCmd = props.getProperty(Configuration.DOCKER_CMD, "docker");
+		_diffusionPollingDelay = Long.parseLong(props.getProperty(DIFFUSION_POLLDELAY, "100"));
         _algorithms = getAlgorithms(props.getProperty(Configuration.ALGORITHM_MAP, null));
+		_diffusionAlgo = null;
 		if (_algorithms != null){
 			for (String algoName : _algorithms.getAlgorithms().keySet()){
 				CommunityDetectionAlgorithm cda = _algorithms.getAlgorithms().get(algoName);
 				if (cda.getInputDataFormat().equals("CXMATE_INPUT") &&
 						cda.getOutputDataFormat().equals("CXMATE_OUTPUT")){
 					_diffusionAlgo = cda;
-					_logger.info("Found diffusion algorithm: {} - {} "
-							+ cda.getName(), cda.getDisplayName());
+					_logger.info("Found diffusion algorithm: {} - {} ",
+							cda.getName(), cda.getDisplayName());
 					break;
 				}
 			}
@@ -135,8 +139,22 @@ public class Configuration {
         return _hostURL;
     }
     
+	/**
+	 * Gets the diffusion algorithm if found in configuration
+	 * @return 
+	 */
 	public CommunityDetectionAlgorithm getDiffusionAlgorithm(){
 		return _diffusionAlgo;
+	}
+	
+	/**
+	 * Gets the polling delay for diffusion which denotes how 
+	 * long service should wait before checking if diffusion task
+	 * is complete
+	 * @return time in milliseconds
+	 */
+	public long getDiffusionPollingDelay(){
+		return _diffusionPollingDelay;
 	}
 	
     /**
