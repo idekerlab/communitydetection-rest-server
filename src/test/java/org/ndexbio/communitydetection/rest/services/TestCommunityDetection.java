@@ -1,13 +1,9 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.ndexbio.communitydetection.rest.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URI;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -20,6 +16,7 @@ import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.mock.MockDispatcherFactory;
 import org.jboss.resteasy.mock.MockHttpRequest;
 import org.jboss.resteasy.mock.MockHttpResponse;
+import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,20 +39,51 @@ public class TestCommunityDetection {
     
     @Rule
     public TemporaryFolder _folder = new TemporaryFolder();
-   
+
+	@After
+	public void tearDown(){
+		try {
+			Configuration.getInstance().setCommunityDetectionEngine(null);
+		} catch(Exception ex){
+			ex.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Creates Dispatcher used to invoke mock request
+	 * @return Dispatcher loaded with CommunityDetection clas
+	 */
+	public Dispatcher getDispatcher(){
+		Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
+		dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+		return dispatcher;
+	}
+	
+	/**
+	 * Creates basic configuration with task directory set to full path
+	 * of tempDir passed in
+	 * @param tempDir
+	 * @return
+	 * @throws IOException 
+	 */
+	public File createBasicConfigurationFile(File tempDir) throws IOException {
+		File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
+            
+		FileWriter fw = new FileWriter(confFile);
+
+		fw.write(Configuration.TASK_DIR + " = "
+				+ tempDir.getAbsolutePath() + "\n");
+		fw.flush();
+		fw.close();
+		return confFile;
+	}
+	
     @Test
     public void testRequestCommunityDetectionWhereEngineNotLoaded() throws Exception {
         try {
             File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+            File confFile = createBasicConfigurationFile(tempDir);
+            Dispatcher dispatcher = getDispatcher();
 
             MockHttpRequest request = MockHttpRequest.post(Configuration.V_ONE_PATH);
             CommunityDetectionRequest query = new CommunityDetectionRequest();
@@ -84,15 +112,9 @@ public class TestCommunityDetection {
     public void testRequestWhereQueryRaisesError() throws Exception {
         try {
             File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+            File confFile = createBasicConfigurationFile(tempDir);
+			
+            Dispatcher dispatcher = getDispatcher();
 
             MockHttpRequest request = MockHttpRequest.post(Configuration.V_ONE_PATH);
             CommunityDetectionRequest query = new CommunityDetectionRequest();
@@ -129,15 +151,8 @@ public class TestCommunityDetection {
     public void testRequestWhereQueryRaisesBadRequestError() throws Exception {
         try {
             File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+            File confFile = createBasicConfigurationFile(tempDir);
+            Dispatcher dispatcher = getDispatcher();
 
             MockHttpRequest request = MockHttpRequest.post(Configuration.V_ONE_PATH);
             CommunityDetectionRequest query = new CommunityDetectionRequest();
@@ -174,15 +189,8 @@ public class TestCommunityDetection {
     public void testRequestWhereQueryRaisesBadRequestErrorWithErrorResponse() throws Exception {
         try {
             File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+            File confFile = createBasicConfigurationFile(tempDir);
+            Dispatcher dispatcher = getDispatcher();
 
             MockHttpRequest request = MockHttpRequest.post(Configuration.V_ONE_PATH);
             CommunityDetectionRequest query = new CommunityDetectionRequest();
@@ -221,15 +229,8 @@ public class TestCommunityDetection {
     public void testRequestWhereQueryReturnsNull() throws Exception {
         try {
             File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+            File confFile = createBasicConfigurationFile(tempDir);
+            Dispatcher dispatcher = getDispatcher();
 
             MockHttpRequest request = MockHttpRequest.post(Configuration.V_ONE_PATH);
             CommunityDetectionRequest query = new CommunityDetectionRequest();
@@ -266,15 +267,8 @@ public class TestCommunityDetection {
     public void testRequestWhereQuerySuccess() throws Exception {
         try {
             File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+            File confFile = createBasicConfigurationFile(tempDir);
+            Dispatcher dispatcher = getDispatcher();
 
             MockHttpRequest request = MockHttpRequest.post(Configuration.V_ONE_PATH);
             CommunityDetectionRequest query = new CommunityDetectionRequest();
@@ -313,16 +307,12 @@ public class TestCommunityDetection {
     public void testRequestWhereQuerySuccessAndHostURLSet() throws Exception {
         try {
             File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
+            File confFile = createBasicConfigurationFile(tempDir);
             FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
             fw.write(Configuration.HOST_URL + " = http://foo.com\n");
             fw.flush();
             fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+            Dispatcher dispatcher = getDispatcher();
 
             MockHttpRequest request = MockHttpRequest.post(Configuration.V_ONE_PATH);
             CommunityDetectionRequest query = new CommunityDetectionRequest();
@@ -362,15 +352,8 @@ public class TestCommunityDetection {
 
         try {
             File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+            File confFile = createBasicConfigurationFile(tempDir);
+            Dispatcher dispatcher = getDispatcher();
 
             MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/12345");
 
@@ -394,15 +377,8 @@ public class TestCommunityDetection {
 
         try {
             File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+            File confFile = createBasicConfigurationFile(tempDir);
+            Dispatcher dispatcher = getDispatcher();
 
             MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/12345");
 
@@ -420,8 +396,6 @@ public class TestCommunityDetection {
             verify(mockEngine);
         } finally {
             _folder.delete();
-            Configuration.getInstance().setCommunityDetectionEngine(null);
-
         }
     }
     
@@ -430,15 +404,8 @@ public class TestCommunityDetection {
 
         try {
             File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+            File confFile = createBasicConfigurationFile(tempDir);
+            Dispatcher dispatcher = getDispatcher();
 
             MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH +
                                                           "/12345?start=1&size=2");
@@ -463,7 +430,6 @@ public class TestCommunityDetection {
             verify(mockEngine);
         } finally {
             _folder.delete();
-            Configuration.getInstance().setCommunityDetectionEngine(null);
         }
     }
     
@@ -472,15 +438,8 @@ public class TestCommunityDetection {
 
         try {
             File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+            File confFile = createBasicConfigurationFile(tempDir);
+            Dispatcher dispatcher = getDispatcher();
 
             MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/algorithms");
 
@@ -504,15 +463,8 @@ public class TestCommunityDetection {
 
         try {
             File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+            File confFile = createBasicConfigurationFile(tempDir);
+            Dispatcher dispatcher = getDispatcher();
 
             MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/algorithms");
 
@@ -530,8 +482,6 @@ public class TestCommunityDetection {
             verify(mockEngine);
         } finally {
             _folder.delete();
-            Configuration.getInstance().setCommunityDetectionEngine(null);
-
         }
     }
     
@@ -540,15 +490,8 @@ public class TestCommunityDetection {
 
         try {
             File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+            File confFile = createBasicConfigurationFile(tempDir);
+            Dispatcher dispatcher = getDispatcher();
 
             MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/algorithms");
 
@@ -571,8 +514,6 @@ public class TestCommunityDetection {
             verify(mockEngine);
         } finally {
             _folder.delete();
-            Configuration.getInstance().setCommunityDetectionEngine(null);
-
         }
     }
     
@@ -581,15 +522,8 @@ public class TestCommunityDetection {
 
         try {
             File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+            File confFile = createBasicConfigurationFile(tempDir);
+            Dispatcher dispatcher = getDispatcher();
 
             MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/12345/status");
 
@@ -606,8 +540,6 @@ public class TestCommunityDetection {
             assertEquals("CommunityDetection Engine not loaded", er.getDescription());
         } finally {
             _folder.delete();
-            Configuration.getInstance().setCommunityDetectionEngine(null);
-
         }
     }
     
@@ -616,15 +548,8 @@ public class TestCommunityDetection {
 
         try {
             File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+            File confFile = createBasicConfigurationFile(tempDir);
+            Dispatcher dispatcher = getDispatcher();
 
             MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH + "/12345/status");
 
@@ -642,8 +567,6 @@ public class TestCommunityDetection {
             verify(mockEngine);
         } finally {
             _folder.delete();
-            Configuration.getInstance().setCommunityDetectionEngine(null);
-
         }
     }
     
@@ -652,15 +575,8 @@ public class TestCommunityDetection {
 
         try {
             File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+            File confFile = createBasicConfigurationFile(tempDir);
+            Dispatcher dispatcher = getDispatcher();
 
             MockHttpRequest request = MockHttpRequest.get(Configuration.V_ONE_PATH +
                                                           "/12345/status");
@@ -685,7 +601,6 @@ public class TestCommunityDetection {
             verify(mockEngine);
         } finally {
             _folder.delete();
-            Configuration.getInstance().setCommunityDetectionEngine(null);
         }
     }
     
@@ -694,15 +609,8 @@ public class TestCommunityDetection {
 
         try {
             File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+            File confFile = createBasicConfigurationFile(tempDir);
+            Dispatcher dispatcher = getDispatcher();
 
             MockHttpRequest request = MockHttpRequest.delete(Configuration.V_ONE_PATH + "/12345");
 
@@ -719,8 +627,6 @@ public class TestCommunityDetection {
             assertEquals("CommunityDetection Engine not loaded", er.getDescription());
         } finally {
             _folder.delete();
-            Configuration.getInstance().setCommunityDetectionEngine(null);
-
         }
     }
     
@@ -729,15 +635,8 @@ public class TestCommunityDetection {
 
         try {
             File tempDir = _folder.newFolder();
-            File confFile = new File(tempDir.getAbsolutePath() + File.separator + "foo.conf");
-            
-            FileWriter fw = new FileWriter(confFile);
-            
-            fw.write(Configuration.TASK_DIR + " = " + tempDir.getAbsolutePath() + "\n");
-            fw.flush();
-            fw.close();
-            Dispatcher dispatcher = MockDispatcherFactory.createDispatcher();
-            dispatcher.getRegistry().addSingletonResource(new CommunityDetection());
+            File confFile = createBasicConfigurationFile(tempDir);
+            Dispatcher dispatcher = getDispatcher();
 
             MockHttpRequest request = MockHttpRequest.delete(Configuration.V_ONE_PATH +
                                                           "/12345");
@@ -756,7 +655,6 @@ public class TestCommunityDetection {
             verify(mockEngine);
         } finally {
             _folder.delete();
-            Configuration.getInstance().setCommunityDetectionEngine(null);
         }
     }
 }
