@@ -60,7 +60,7 @@ import org.ndexbio.communitydetection.rest.model.exceptions.CommunityDetectionEx
 @Path("/")
 public class CommunityDetection {
     
-    static Logger logger = LoggerFactory.getLogger(CommunityDetection.class);
+    static Logger _logger = LoggerFactory.getLogger(CommunityDetection.class);
     
     /**
      * Handles requests to do enrichment
